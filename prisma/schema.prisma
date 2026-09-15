@@ -1,0 +1,452 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================
+// Enums
+// =========================
+
+enum EntityStatus {
+  Active
+  InActive
+}
+
+enum OrderStatus {
+  Pending
+  Confirmed
+  Processing
+  Completed
+  Cancelled
+}
+
+enum PaymentStatus {
+  Pending
+  Paid
+  Failed
+  Refunded
+}
+
+enum DiscountType {
+  Fixed
+  Percentage
+}
+
+// =========================
+// Admin
+// Hệ thống chỉ có một tài khoản admin duy nhất dùng để quản lý
+// =========================
+
+model Admin {
+  id           BigInt @id @default(autoincrement())
+  email        String @unique @db.VarChar(200)
+  passwordHash String @map("password_hash") @db.Text
+
+  recentlyLoginAt     DateTime? @map("recently_login_at")
+  recentlyLoginDevice String?   @map("recently_login_device") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  twoFactorSettings AdminTwoFactorSettings?
+
+  @@map("admin")
+}
+
+// =========================
+// Admin 2FA settings
+// Lưu ý bảo mật: Khóa secret và backup codes nên được mã hóa trước khi lưu
+// =========================
+
+model AdminTwoFactorSettings {
+  id        BigInt  @id @default(autoincrement())
+  adminId   BigInt  @unique @map("admin_id")
+  isEnabled Boolean @default(false) @map("is_enabled")
+
+  // Chuỗi bí mật (Secret Key) dùng cho Google Authenticator
+  twoFactorSecret String? @map("two_factor_secret") @db.Text
+
+  // Danh sách mã dự phòng (Backup Codes) dạng mảng JSON (ví dụ: ["123456", "789012"])
+  backupCodes String? @map("backup_codes") @db.Text
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  admin Admin @relation(fields: [adminId], references: [id])
+
+  @@map("admin_two_factor_settings")
+}
+
+// =========================
+// Category
+// =========================
+
+model Category {
+  id       BigInt  @id @default(autoincrement())
+  parentId BigInt? @map("parent_id")
+
+  name        String  @db.VarChar(100)
+  slug        String  @unique @db.VarChar(120)
+  description String? @db.Text
+
+  status EntityStatus @default(Active)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  products Product[]
+
+  @@index([parentId])
+  @@index([slug])
+  @@index([status])
+  @@map("categories")
+}
+
+// =========================
+// Product
+// =========================
+
+model Product {
+  id         BigInt @id @default(autoincrement())
+  categoryId BigInt @map("category_id")
+
+  name        String  @db.VarChar(255)
+  slug        String  @unique @db.VarChar(255)
+  description String? @db.Text
+
+  status EntityStatus @default(Active)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  category Category         @relation(fields: [categoryId], references: [id])
+  options  ProductOption[]
+  variants ProductVariant[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([status])
+  @@map("products")
+}
+
+// =========================
+// Product Options
+// =========================
+// Ví dụ: Color, Size, Storage
+
+model ProductOption {
+  id        BigInt @id @default(autoincrement())
+  productId BigInt @map("product_id")
+
+  name String @db.VarChar(50)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product              @relation(fields: [productId], references: [id])
+  values  ProductOptionValue[]
+
+  @@unique([productId, name])
+  @@index([productId])
+  @@map("product_options")
+}
+
+// =========================
+// Product Option Values
+// =========================
+// Ví dụ: Color -> Black, White, Red / Size -> S, M, L
+
+model ProductOptionValue {
+  id       BigInt @id @default(autoincrement())
+  optionId BigInt @map("option_id")
+
+  value            String @db.VarChar(100)
+  normalizedValue  String @map("normalized_value") @db.VarChar(100)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  option       ProductOption        @relation(fields: [optionId], references: [id])
+  variantLinks VariantOptionValue[]
+
+  @@unique([optionId, normalizedValue])
+  @@index([optionId])
+  @@map("product_option_values")
+}
+
+// =========================
+// Product Variants
+// =========================
+
+model ProductVariant {
+  id        BigInt @id @default(autoincrement())
+  productId BigInt @map("product_id")
+
+  sku String @unique @db.VarChar(100)
+
+  // Tên hiển thị của variant. Ví dụ: "Black / M / 256GB"
+  name String? @db.VarChar(255)
+
+  price    Decimal  @db.Decimal(15, 2)
+  oldPrice Decimal? @map("old_price") @db.Decimal(15, 2)
+
+  stockQuantity Int @default(0) @map("stock_quantity")
+
+  status EntityStatus @default(Active)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product      Product              @relation(fields: [productId], references: [id])
+  optionValues VariantOptionValue[]
+  images       ProductImage[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+
+  @@index([productId])
+  @@index([sku])
+  @@index([status])
+  @@map("product_variants")
+}
+
+// =========================
+// Variant <-> Option Values
+// =========================
+// Một variant có nhiều option values.
+// Ví dụ: Variant "Black / M" -> option_value_id = Black, option_value_id = M
+
+model VariantOptionValue {
+  variantId     BigInt @map("variant_id")
+  optionValueId BigInt @map("option_value_id")
+
+  variant     ProductVariant     @relation(fields: [variantId], references: [id])
+  optionValue ProductOptionValue @relation(fields: [optionValueId], references: [id])
+
+  @@id([variantId, optionValueId])
+  @@index([optionValueId])
+  @@map("variant_option_values")
+}
+
+// =========================
+// Product Images
+// =========================
+
+model ProductImage {
+  id               BigInt @id @default(autoincrement())
+  productVariantId BigInt @map("product_variant_id")
+
+  url     String  @db.VarChar(500)
+  altText String? @map("alt_text") @db.VarChar(255)
+
+  sortOrder Int     @default(0) @map("sort_order")
+  isPrimary Boolean @default(false) @map("is_primary")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  variant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@index([productVariantId])
+  @@map("product_images")
+}
+
+// =========================
+// Cart
+// =========================
+
+model Cart {
+  id String @id @db.VarChar(64)
+
+  expiresAt DateTime? @map("expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items  CartItem[]
+  orders Order[]
+
+  @@index([expiresAt])
+  @@map("carts")
+}
+
+// =========================
+// Cart Items
+// =========================
+
+model CartItem {
+  id               BigInt @id @default(autoincrement())
+  cartId           String @map("cart_id") @db.VarChar(64)
+  productVariantId BigInt @map("product_variant_id")
+
+  quantity Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cart    Cart           @relation(fields: [cartId], references: [id])
+  variant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@unique([cartId, productVariantId])
+  @@index([productVariantId])
+  @@map("cart_items")
+}
+
+// =========================
+// Orders
+// =========================
+
+model Order {
+  id          BigInt @id @default(autoincrement())
+  cartId      String @map("cart_id") @db.VarChar(64)
+  orderNumber String @unique @map("order_number") @db.VarChar(50)
+
+  // ===== Recipient Snapshot =====
+  recipientName  String @map("recipient_name") @db.VarChar(150)
+  recipientEmail String @map("recipient_email") @db.VarChar(150)
+  recipientPhone String @map("recipient_phone") @db.VarChar(30)
+
+  // ===== Shipping Address Snapshot =====
+  shippingProvince String @map("shipping_province") @db.VarChar(100)
+  shippingDistrict String @map("shipping_district") @db.VarChar(100)
+  shippingWard     String @map("shipping_ward") @db.VarChar(100)
+  shippingAddress  String @map("shipping_address") @db.VarChar(255)
+
+  // ===== Price =====
+  subtotal       Decimal @db.Decimal(15, 2)
+  discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(15, 2)
+  shippingFee    Decimal @default(0) @map("shipping_fee") @db.Decimal(15, 2)
+  totalAmount    Decimal @map("total_amount") @db.Decimal(15, 2)
+
+  status OrderStatus @default(Pending)
+
+  note String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cart         Cart          @relation(fields: [cartId], references: [id])
+  items        OrderItem[]
+  payments     Payment[]
+  couponUsages CouponUsage[]
+
+  @@index([cartId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// =========================
+// Order Items
+// =========================
+
+model OrderItem {
+  id               BigInt @id @default(autoincrement())
+  orderId          BigInt @map("order_id")
+  productVariantId BigInt @map("product_variant_id")
+
+  // ===== Product Snapshot =====
+  productName String  @map("product_name") @db.VarChar(255)
+  sku         String  @db.VarChar(100)
+  variantName String? @map("variant_name") @db.VarChar(255)
+
+  // ===== Price Snapshot =====
+  unitPrice Decimal @map("unit_price") @db.Decimal(15, 2)
+  quantity  Int
+  subtotal  Decimal @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  order   Order          @relation(fields: [orderId], references: [id])
+  variant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@index([orderId])
+  @@index([productVariantId])
+  @@map("order_items")
+}
+
+// =========================
+// Payments
+// =========================
+
+model Payment {
+  id      BigInt @id @default(autoincrement())
+  orderId BigInt @map("order_id")
+
+  provider      String  @db.VarChar(50)
+  transactionId String? @map("transaction_id") @db.VarChar(255)
+
+  amount Decimal @db.Decimal(15, 2)
+
+  status PaymentStatus @default(Pending)
+
+  paidAt DateTime? @map("paid_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([transactionId])
+  @@index([status])
+  @@map("payments")
+}
+
+// =========================
+// Coupons
+// =========================
+
+model Coupon {
+  id   BigInt @id @default(autoincrement())
+  code String @unique @db.VarChar(50)
+
+  discountType  DiscountType @map("discount_type")
+  discountValue Decimal      @map("discount_value") @db.Decimal(15, 2)
+
+  minimumOrderAmount Decimal? @map("minimum_order_amount") @db.Decimal(15, 2)
+
+  usageLimit Int? @map("usage_limit")
+  usedCount  Int  @default(0) @map("used_count")
+
+  startsAt  DateTime @map("starts_at")
+  expiresAt DateTime @map("expires_at")
+
+  status EntityStatus @default(Active)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  usages CouponUsage[]
+
+  @@index([code])
+  @@index([status])
+  @@map("coupons")
+}
+
+// =========================
+// Coupon Usages
+// =========================
+
+model CouponUsage {
+  id       BigInt @id @default(autoincrement())
+  couponId BigInt @map("coupon_id")
+  orderId  BigInt @map("order_id")
+
+  discountAmount Decimal @map("discount_amount") @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  order  Order  @relation(fields: [orderId], references: [id])
+
+  @@unique([couponId, orderId])
+  @@index([couponId])
+  @@index([orderId])
+  @@map("coupon_usages")
+}
