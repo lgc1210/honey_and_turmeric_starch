@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { LoginForm } from "@/features/admin/components/admin-forms";
 
 export default function AdminAuthPage() {
 	return (
@@ -11,27 +10,7 @@ export default function AdminAuthPage() {
 					<p className='mt-2 text-sm text-[#6a4d32]'>Quản lý cửa hàng Kim Bac Store</p>
 				</div>
 
-				<form className='space-y-4'>
-					<div>
-						<label className='mb-2 block text-sm font-medium text-[#2d1b12]'>Email</label>
-						<input type='email' defaultValue='admin@kimbacstore.vn' className='w-full rounded-xl border border-[#ecd8bd] bg-[#fff] px-3 py-2.5 text-[#2d1b12] outline-none ring-0' />
-					</div>
-					<div>
-						<label className='mb-2 block text-sm font-medium text-[#2d1b12]'>Mật khẩu</label>
-						<input type='password' defaultValue='••••••••' className='w-full rounded-xl border border-[#ecd8bd] bg-[#fff] px-3 py-2.5 text-[#2d1b12] outline-none ring-0' />
-					</div>
-					<div>
-						<label className='mb-2 block text-sm font-medium text-[#2d1b12]'>Mã xác thực 2FA</label>
-						<input type='text' inputMode='numeric' maxLength={6} placeholder='123456' className='w-full rounded-xl border border-[#ecd8bd] bg-[#fff] px-3 py-2.5 text-[#2d1b12] outline-none ring-0' />
-					</div>
-
-					<div className='flex items-center justify-between text-sm text-[#6a4d32]'>
-						<label className='flex items-center gap-2'><input type='checkbox' defaultChecked className='h-4 w-4 accent-[#f5cb63]' />Ghi nhớ đăng nhập</label>
-						<Link href='#' className='text-[#a35f2d]'>Quên mật khẩu?</Link>
-					</div>
-
-					<Button type='submit' className='w-full'>Đăng nhập</Button>
-				</form>
+				<LoginForm />
 			</div>
 		</div>
 	);

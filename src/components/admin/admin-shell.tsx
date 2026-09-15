@@ -2,7 +2,14 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { LayoutDashboard, Package, Tags, ShoppingCart, Users, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { adminNavItems } from "@/features/admin/mock-data";
+import { getCurrentAdmin } from "@/features/admin/api/auth";
+const adminNavItems = [
+	{ href: "/admin/dashboard", label: "Tổng quan", icon: "Dashboard" },
+	{ href: "/admin/products", label: "Sản phẩm", icon: "Products" },
+	{ href: "/admin/categories", label: "Danh mục", icon: "Categories" },
+	{ href: "/admin/orders", label: "Đơn hàng", icon: "Orders" },
+	{ href: "/admin/accounts", label: "Tài khoản", icon: "Accounts" },
+] as const;
 
 const iconMap = {
 	Dashboard: LayoutDashboard,
@@ -12,7 +19,7 @@ const iconMap = {
 	Accounts: Users,
 } as const;
 
-export function AdminShell({
+export async function AdminShell({
 	children,
 	title,
 	description,
@@ -23,6 +30,7 @@ export function AdminShell({
 	description: string;
 	activeHref: string;
 }) {
+	const admin = await getCurrentAdmin();
 	const activeItem = adminNavItems.find((item) => item.href === activeHref) ?? adminNavItems[0];
 
 	return (
@@ -76,7 +84,7 @@ export function AdminShell({
 							<div className='rounded-full bg-[#f5cb63] px-3 py-1 text-xs font-semibold text-[#2d1b12]'>ONLINE</div>
 							<div className='flex items-center gap-2 rounded-full border border-[#ecd8bd] bg-[#fff] px-3 py-1.5 text-sm text-[#5d4534]'>
 								<span className='h-2.5 w-2.5 rounded-full bg-[#58a06f]' />
-								<span>admin@kimbacstore.vn</span>
+								<span>{admin?.email ?? "Admin"}</span>
 							</div>
 						</div>
 					</header>

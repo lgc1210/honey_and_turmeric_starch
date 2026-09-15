@@ -1,48 +1,9 @@
 import { AdminShell } from "@/components/admin/admin-shell";
-import { accountRows, recentActivity } from "@/features/admin/mock-data";
+import { requireAdmin } from "@/features/admin/api/auth";
+import { prisma } from "@/lib/prisma";
 
-const statusStyles: Record<string, string> = {
-	Online: "bg-[#dfeecf] text-[#335e36]",
-	Offline: "bg-[#f0e7dd] text-[#5d4534]",
-};
-
-export default function AccountsPage() {
-	return (
-		<AdminShell
-			title='Tài khoản & phân quyền'
-			description='Quản lý trạng thái hoạt động của nhân sự và các hành động gần đây trong hệ thống.'
-			activeHref='/admin/accounts'
-		>
-			<div className='grid gap-6 xl:grid-cols-[1.3fr_0.8fr]'>
-				<section className='overflow-hidden rounded-2xl border border-[#ecd8bd] bg-[#fff]'>
-					<div className='border-b border-[#f1e7d9] bg-[#fffaf3] px-4 py-3 text-base font-semibold text-[#2d1b12]'>Danh sách tài khoản</div>
-					<div>
-						{accountRows.map((account) => (
-							<div key={account.email} className='flex items-center justify-between border-b border-[#f1e7d9] px-4 py-3 last:border-b-0'>
-								<div>
-									<p className='font-medium text-[#2d1b12]'>{account.name}</p>
-									<p className='text-sm text-[#6a4d32]'>{account.email}</p>
-								</div>
-								<div className='text-right'>
-									<p className='text-sm text-[#6a4d32]'>{account.role}</p>
-									<span className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[account.status] ?? 'bg-[#f0e7dd] text-[#5d4534]'}`}>
-										{account.status}
-									</span>
-								</div>
-							</div>
-						))}
-					</div>
-				</section>
-
-				<aside className='rounded-2xl border border-[#ecd8bd] bg-[#fff] p-5'>
-					<h3 className='text-lg font-semibold text-[#2d1b12]'>Hoạt động gần đây</h3>
-					<div className='mt-4 space-y-3'>
-						{recentActivity.map((item) => (
-							<div key={item} className='rounded-xl border border-[#f1e7d9] bg-[#fffaf3] p-3 text-sm text-[#5d4534]'>{item}</div>
-						))}
-					</div>
-				</aside>
-			</div>
-		</AdminShell>
-	);
+export default async function AccountsPage() {
+	await requireAdmin();
+	const admins = await prisma.admin.findMany({ select: { id: true, email: true, recentlyLoginAt: true, twoFactorSettings: { select: { isEnabled: true } } } });
+	return <AdminShell title="Tài khoản quản trị" description="Tài khoản quản trị duy nhất và trạng thái bảo mật." activeHref="/admin/accounts"><div className="overflow-hidden rounded-2xl border"><table className="min-w-full text-left text-sm"><thead><tr className="bg-[#fffaf3]"><th className="p-3">Email</th><th className="p-3">2FA</th><th className="p-3">Đăng nhập gần nhất</th></tr></thead><tbody>{admins.map((admin) => <tr key={admin.id.toString()} className="border-t"><td className="p-3 font-medium">{admin.email}</td><td className="p-3">{admin.twoFactorSettings?.isEnabled ? "Đã bật" : "Chưa bật"}</td><td className="p-3">{admin.recentlyLoginAt?.toLocaleString("vi-VN") ?? "Chưa đăng nhập"}</td></tr>)}</tbody></table></div></AdminShell>;
 }
