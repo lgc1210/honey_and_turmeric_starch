@@ -1,16 +1,47 @@
+import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { ProductForm } from "@/features/admin/components/admin-forms";
-import { requireAdmin } from "@/features/admin/api/auth";
-import { prisma } from "@/lib/prisma";
+import { getActiveCategoryOptions } from "@/features/category/api/service";
+import { getAdminProducts } from "@/features/product/api/service";
+import { productQuerySchema } from "@/features/product/schema";
+import { ProductCreateForm } from "@/features/product/components/product-create-form";
+import { ProductTable } from "@/features/product/components/product-table";
+import type { SearchParams } from "@/types/common";
 
-export default async function ProductsPage() {
-	await requireAdmin();
-	const [products, categories] = await Promise.all([
-		prisma.product.findMany({ include: { category: true, variants: { orderBy: { price: "asc" }, take: 1 } }, orderBy: { createdAt: "desc" } }),
-		prisma.category.findMany({ where: { status: "Active" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
-	]);
-	return <AdminShell title="Quản lý sản phẩm" description="Sản phẩm và biến thể được đọc trực tiếp từ Prisma." activeHref="/admin/products">
-		<ProductForm categories={categories.map((c) => ({ id: c.id.toString(), name: c.name }))} />
-		<div className="mt-4 overflow-x-auto rounded-2xl border"><table className="min-w-full text-left text-sm"><thead><tr className="bg-[#fffaf3]"><th className="p-3">Sản phẩm</th><th className="p-3">Danh mục</th><th className="p-3">SKU</th><th className="p-3">Giá</th><th className="p-3">Trạng thái</th></tr></thead><tbody>{products.map((p) => <tr key={p.id.toString()} className="border-t"><td className="p-3 font-medium">{p.name}</td><td className="p-3">{p.category.name}</td><td className="p-3">{p.variants[0]?.sku ?? "—"}</td><td className="p-3">{p.variants[0]?.price.toString() ?? "—"} ₫</td><td className="p-3">{p.status}</td></tr>)}</tbody></table></div>
-	</AdminShell>;
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+	const rawParams = await searchParams;
+	const query = productQuerySchema.parse({
+		page: rawParams.page,
+		search: rawParams.search,
+		categoryId: rawParams.categoryId,
+		status: rawParams.status,
+	});
+
+	const [categories, result] = await Promise.all([getActiveCategoryOptions(), getAdminProducts(query)]);
+
+	return (
+		<AdminShell>
+			<div className='mb-6 flex items-center justify-between'>
+				<h1 className='font-serif text-2xl font-semibold text-foreground'>Sản phẩm</h1>
+			</div>
+
+			<details className='mb-6 border border-border p-4'>
+				<summary className='cursor-pointer font-medium text-foreground'>+ Thêm sản phẩm mới</summary>
+				<div className='mt-4'>
+					<ProductCreateForm categories={categories} />
+				</div>
+			</details>
+
+			<ProductTable products={result.items} />
+
+			{result.totalPages > 1 && (
+				<div className='mt-4 flex gap-2'>
+					{Array.from({ length: result.totalPages }, (_, i) => i + 1).map((page) => (
+						<Link key={page} href={`/admin/products?page=${page}`} className='border border-border px-3 py-1 text-sm'>
+							{page}
+						</Link>
+					))}
+				</div>
+			)}
+		</AdminShell>
+	);
 }

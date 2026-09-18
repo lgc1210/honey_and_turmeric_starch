@@ -50,6 +50,42 @@ export const productQuerySchema = z.object({
 	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
+export const productStatusSchema = z.object({
+	id: z.coerce.number(),
+	status: EntityStatusEnum,
+});
+
+export const createVariantSchema = z.object({
+	productId: z.coerce.number(),
+	sku: productVariantSchema.shape.sku,
+	name: productVariantSchema.shape.name,
+	price: productVariantSchema.shape.price,
+	oldPrice: productVariantSchema.shape.oldPrice,
+	stockQuantity: productVariantSchema.shape.stockQuantity,
+	optionValueIds: productVariantSchema.shape.optionValueIds,
+});
+
+export const updateVariantSchema = createVariantSchema.extend({
+	id: z.coerce.number(),
+});
+
+export const variantStatusSchema = z.object({
+	id: z.coerce.number(),
+	status: EntityStatusEnum,
+});
+
+export const productImageSchema = z.object({
+	id: z.coerce.number().optional(),
+	productVariantId: z.coerce.number(),
+	url: z.url("URL ảnh không hợp lệ").max(500),
+	altText: z.string().max(255).optional(),
+	sortOrder: z.coerce.number().int().min(0).default(0),
+	isPrimary: z.boolean().default(false),
+});
+
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type ProductQuery = z.infer<typeof productQuerySchema>;
+export type CreateVariantInput = z.infer<typeof createVariantSchema>;
+export type UpdateVariantInput = z.infer<typeof updateVariantSchema>;
+export type ProductImageInput = z.infer<typeof productImageSchema>;

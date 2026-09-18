@@ -28,3 +28,12 @@ export const couponSchema = z
 	});
 
 export type CouponInput = z.infer<typeof couponSchema>;
+
+export const updateCouponSchema = z.object({ id: z.coerce.number() }).and(couponSchema);
+
+export const couponStatusSchema = z.object({
+	id: z.coerce.number(),
+	status: z.enum(["Active", "InActive"]),
+});
+
+export type UpdateCouponInput = z.infer<typeof updateCouponSchema>;

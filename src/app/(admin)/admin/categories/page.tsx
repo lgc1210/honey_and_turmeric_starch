@@ -1,12 +1,16 @@
 import { AdminShell } from "@/components/admin/admin-shell";
-import { CategoryForm } from "@/features/admin/components/admin-forms";
-import { requireAdmin } from "@/features/admin/api/auth";
-import { prisma } from "@/lib/prisma";
+import { getAdminCategories } from "@/features/category/api/service";
+import { CategoryForm } from "@/features/category/components/category-form";
+import { CategoryViewSwitcher } from "@/features/category/components/category-view-switcher";
 
 export default async function CategoriesPage() {
-	await requireAdmin();
-	const categories = await prisma.category.findMany({ include: { _count: { select: { products: true } } }, orderBy: { name: "asc" } });
-	return <AdminShell title="Danh mục sản phẩm" description="Quản lý danh mục từ database." activeHref="/admin/categories">
-		<CategoryForm /><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{categories.map((category) => <div key={category.id.toString()} className="rounded-2xl border p-4"><h3 className="font-semibold">{category.name}</h3><p className="mt-2 text-sm text-[#6a4d32]">{category.slug} · {category._count.products} sản phẩm</p><p className="mt-2 text-xs">{category.status}</p></div>)}</div>
-	</AdminShell>;
+	const categories = await getAdminCategories();
+
+	return (
+		<AdminShell>
+			<h1 className='mb-4 font-serif text-2xl font-semibold text-foreground'>Danh mục</h1>
+			<CategoryForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} />
+			<CategoryViewSwitcher categories={categories} />
+		</AdminShell>
+	);
 }

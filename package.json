@@ -1,43 +1,45 @@
 {
-  "name": "honey_and_turmeric_starch",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "postinstall": "prisma generate",
-    "prisma:seed": "prisma db seed"
-  },
-  "dependencies": {
-    "@base-ui/react": "^1.8.0",
-    "@hookform/resolvers": "^5.9.1",
-    "@prisma/adapter-pg": "^7.10.0",
-    "@prisma/client": "^7.10.0",
-    "axios": "^1.20.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "cn": "^0.3.0",
-    "lucide-react": "^1.46.0",
-    "next": "16.3.5",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "react-hook-form": "^7.88.0",
-    "shadcn": "^4.21.0",
-    "tw-animate-css": "^1.4.0",
-    "zod": "^4.6.5"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.5",
-    "prisma": "^7.10.0",
-    "tsx": "^4.19.3",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+	"name": "honey_and_turmeric_starch",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "eslint",
+		"postinstall": "prisma generate",
+		"prisma:seed": "prisma db seed"
+	},
+	"dependencies": {
+		"@base-ui/react": "^1.8.0",
+		"@hookform/resolvers": "^5.9.1",
+		"@node-rs/argon2": "^2.2.1",
+		"@prisma/adapter-pg": "^7.10.0",
+		"@prisma/client": "^7.10.0",
+		"axios": "^1.20.0",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"cn": "^0.3.0",
+		"lucide-react": "^1.46.0",
+		"next": "^16.2.10",
+		"otplib": "^13.5.0",
+		"react": "19.2.8",
+		"react-dom": "19.2.8",
+		"react-hook-form": "^7.88.0",
+		"shadcn": "^4.21.0",
+		"tw-animate-css": "^1.4.0",
+		"zod": "^4.6.5"
+	},
+	"devDependencies": {
+		"@tailwindcss/postcss": "^4",
+		"@types/node": "^20",
+		"@types/react": "^19",
+		"@types/react-dom": "^19",
+		"eslint": "^9",
+		"eslint-config-next": "^16.2.10",
+		"prisma": "^7.10.0",
+		"tailwindcss": "^4",
+		"tsx": "^4.19.3",
+		"typescript": "^5"
+	}
 }

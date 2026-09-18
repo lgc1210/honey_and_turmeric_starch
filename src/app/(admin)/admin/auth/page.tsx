@@ -1,15 +1,18 @@
-import { LoginForm } from "@/features/admin/components/admin-forms";
+import { redirect } from "next/navigation";
+import { getCurrentAdmin } from "@/features/auth/api/session";
+import { LoginForm } from "@/features/auth/components/login-form";
+import paths from "@/config/path";
 
-export default function AdminAuthPage() {
+export default async function AdminAuthPage() {
+	const admin = await getCurrentAdmin();
+
+	if (admin) redirect(paths.admin.dashboard);
+
 	return (
-		<div className='flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#f9f1e3,#f3e3c5_35%,#efe0b8_100%)] px-4'>
-			<div className='w-full max-w-md rounded-2xl border border-[#ecd8bd] bg-[#fffaf3] p-7 shadow-[0_20px_45px_rgba(110,83,48,0.12)]'>
-				<div className='mb-6 text-center'>
-					<div className='mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f5cb63] text-xl font-bold text-[#2d1b12]'>KB</div>
-					<h1 className='mt-4 text-2xl font-semibold text-[#2d1b12]'>Đăng nhập Admin</h1>
-					<p className='mt-2 text-sm text-[#6a4d32]'>Quản lý cửa hàng Kim Bac Store</p>
-				</div>
-
+		<div className='flex min-h-svh items-center justify-center p-4'>
+			<div className='w-full max-w-sm border border-border bg-card p-6'>
+				<h1 className='mb-1 font-serif text-xl font-semibold text-foreground'>Đăng nhập quản trị</h1>
+				<p className='mb-6 text-sm text-muted-foreground'>Kim Bạc Store Admin</p>
 				<LoginForm />
 			</div>
 		</div>

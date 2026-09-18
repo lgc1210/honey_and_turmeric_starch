@@ -20,7 +20,12 @@ export async function handleAction<TSchema extends z.ZodType, TResult>(
 		const data = await handler(parsed.data);
 		return { success: true, data };
 	} catch (error) {
-		console.error("[Action Error]", error);
+		// Chỉ log message (string), KHÔNG log thẳng object Error: Next.js dev server
+		// tự động "enhance" console.error khi thấy Error object bằng cách vẽ code
+		// frame nguồn qua next-code-frame — crate này có bug panic khi dòng nguồn
+		// lân cận chứa ký tự tiếng Việt đa byte (VD: 'ý', 'ộ'...) rơi đúng vào một
+		// byte offset giữa ký tự. Log string thường để tránh kích hoạt cơ chế đó.
+		console.error("[Action Error]", error instanceof Error ? error.message : error);
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : "Đã có lỗi xảy ra",

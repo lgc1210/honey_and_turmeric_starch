@@ -1,31 +1,153 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { randomBytes, scryptSync } from "node:crypto";
+import { hash } from "@node-rs/argon2";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
-const passwordHash = (password: string) => {
-	const salt = randomBytes(16).toString("hex");
-	return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
-};
+const passwordHash = (password: string) => hash(password);
 
 async function main() {
-	const admin = await prisma.admin.upsert({ where: { email: "admin@kimbacstore.vn" }, update: {}, create: { email: "admin@kimbacstore.vn", passwordHash: passwordHash(process.env.ADMIN_SEED_PASSWORD ?? "Admin123!") } });
-	await prisma.adminTwoFactorSettings.upsert({ where: { adminId: admin.id }, update: {}, create: { adminId: admin.id } });
-	const honey = await prisma.category.upsert({ where: { slug: "mat-ong" }, update: {}, create: { name: "Mật ong", slug: "mat-ong", description: "Mật ong tự nhiên" } });
-	const turmeric = await prisma.category.upsert({ where: { slug: "tinh-bot-nghe" }, update: {}, create: { name: "Tinh bột nghệ", slug: "tinh-bot-nghe" } });
-	const product = await prisma.product.upsert({ where: { slug: "mat-ong-rung-nguyen-chat" }, update: {}, create: { categoryId: honey.id, name: "Mật ong rừng nguyên chất", slug: "mat-ong-rung-nguyen-chat", description: "Sản phẩm đại diện cho cửa hàng" } });
-	const option = await prisma.productOption.upsert({ where: { productId_name: { productId: product.id, name: "Dung tích" } }, update: {}, create: { productId: product.id, name: "Dung tích" } });
-	const value = await prisma.productOptionValue.upsert({ where: { optionId_normalizedValue: { optionId: option.id, normalizedValue: "500ml" } }, update: {}, create: { optionId: option.id, value: "500ml", normalizedValue: "500ml" } });
-	const variant = await prisma.productVariant.upsert({ where: { sku: "MH-500" }, update: {}, create: { productId: product.id, sku: "MH-500", name: "500ml", price: 420000, stockQuantity: 48 } });
-	await prisma.variantOptionValue.upsert({ where: { variantId_optionValueId: { variantId: variant.id, optionValueId: value.id } }, update: {}, create: { variantId: variant.id, optionValueId: value.id } });
+	const admin = await prisma.admin.upsert({
+		where: { email: "admin@kimbacstore.vn" },
+		update: {},
+		create: {
+			email: "admin@kimbacstore.vn",
+			passwordHash: await passwordHash(process.env.ADMIN_SEED_PASSWORD ?? "Admin123!"),
+		},
+	});
+	await prisma.adminTwoFactorSettings.upsert({
+		where: { adminId: admin.id },
+		update: {},
+		create: { adminId: admin.id },
+	});
+	const honey = await prisma.category.upsert({
+		where: { slug: "mat-ong" },
+		update: {},
+		create: { name: "Mật ong", slug: "mat-ong", description: "Mật ong tự nhiên" },
+	});
+	const turmeric = await prisma.category.upsert({
+		where: { slug: "tinh-bot-nghe" },
+		update: {},
+		create: { name: "Tinh bột nghệ", slug: "tinh-bot-nghe" },
+	});
+	const product = await prisma.product.upsert({
+		where: { slug: "mat-ong-rung-nguyen-chat" },
+		update: {},
+		create: {
+			categoryId: honey.id,
+			name: "Mật ong rừng nguyên chất",
+			slug: "mat-ong-rung-nguyen-chat",
+			description: "Sản phẩm đại diện cho cửa hàng",
+		},
+	});
+	const option = await prisma.productOption.upsert({
+		where: { productId_name: { productId: product.id, name: "Dung tích" } },
+		update: {},
+		create: { productId: product.id, name: "Dung tích" },
+	});
+	const value = await prisma.productOptionValue.upsert({
+		where: { optionId_normalizedValue: { optionId: option.id, normalizedValue: "500ml" } },
+		update: {},
+		create: { optionId: option.id, value: "500ml", normalizedValue: "500ml" },
+	});
+	const variant = await prisma.productVariant.upsert({
+		where: { sku: "MH-500" },
+		update: {},
+		create: { productId: product.id, sku: "MH-500", name: "500ml", price: 420000, stockQuantity: 48 },
+	});
+	await prisma.variantOptionValue.upsert({
+		where: { variantId_optionValueId: { variantId: variant.id, optionValueId: value.id } },
+		update: {},
+		create: { variantId: variant.id, optionValueId: value.id },
+	});
+	await prisma.productImage.upsert({
+		where: { id: BigInt(1) },
+		update: {
+			url: "https://images.unsplash.com/photo-1587049352846-4a222e784d38",
+			altText: "Mật ong rừng",
+			isPrimary: true,
+		},
+		create: {
+			productVariantId: variant.id,
+			url: "https://images.unsplash.com/photo-1587049352846-4a222e784d38",
+			altText: "Mật ong rừng",
+			isPrimary: true,
+		},
+	});
+	const turmericProduct = await prisma.product.upsert({
+		where: { slug: "tinh-bot-nghe-nguyen-chat" },
+		update: {},
+		create: {
+			categoryId: turmeric.id,
+			name: "Tinh bột nghệ nguyên chất",
+			slug: "tinh-bot-nghe-nguyen-chat",
+			description: "Tinh bột nghệ sấy lạnh",
+		},
+	});
+	await prisma.productVariant.upsert({
+		where: { sku: "NGHE-200" },
+		update: {},
+		create: { productId: turmericProduct.id, sku: "NGHE-200", name: "200g", price: 180000, stockQuantity: 35 },
+	});
 	const cart = await prisma.cart.upsert({ where: { id: "seed-cart" }, update: {}, create: { id: "seed-cart" } });
-	const item = await prisma.cartItem.upsert({ where: { cartId_productVariantId: { cartId: cart.id, productVariantId: variant.id } }, update: {}, create: { cartId: cart.id, productVariantId: variant.id, quantity: 2 } });
+	const item = await prisma.cartItem.upsert({
+		where: { cartId_productVariantId: { cartId: cart.id, productVariantId: variant.id } },
+		update: {},
+		create: { cartId: cart.id, productVariantId: variant.id, quantity: 2 },
+	});
 	const existingOrder = await prisma.order.findUnique({ where: { orderNumber: "HT-SEED-001" } });
 	if (!existingOrder) {
-		await prisma.order.create({ data: { cartId: cart.id, orderNumber: "HT-SEED-001", recipientName: "Nguyễn Thị Lan", recipientEmail: "lan@example.com", recipientPhone: "0900000000", shippingProvince: "Hà Nội", shippingDistrict: "Cầu Giấy", shippingWard: "Dịch Vọng", shippingAddress: "1 Đường Mẫu", subtotal: 840000, totalAmount: 840000, status: "Confirmed", items: { create: { productVariantId: variant.id, productName: product.name, sku: variant.sku, variantName: variant.name, unitPrice: variant.price, quantity: item.quantity, subtotal: 840000 } }, payments: { create: { provider: "COD", amount: 840000, status: "Pending" } } } });
+		await prisma.order.create({
+			data: {
+				cartId: cart.id,
+				orderNumber: "HT-SEED-001",
+				recipientName: "Nguyễn Thị Lan",
+				recipientEmail: "lan@example.com",
+				recipientPhone: "0900000000",
+				shippingProvince: "Hà Nội",
+				shippingDistrict: "Cầu Giấy",
+				shippingWard: "Dịch Vọng",
+				shippingAddress: "1 Đường Mẫu",
+				subtotal: 840000,
+				totalAmount: 840000,
+				status: "Confirmed",
+				items: {
+					create: {
+						productVariantId: variant.id,
+						productName: product.name,
+						sku: variant.sku,
+						variantName: variant.name,
+						unitPrice: variant.price,
+						quantity: item.quantity,
+						subtotal: 840000,
+					},
+				},
+				payments: { create: { provider: "COD", amount: 840000, status: "Pending" } },
+			},
+		});
 	}
+	const coupon = await prisma.coupon.upsert({
+		where: { code: "CHAOMUNG10" },
+		update: { usedCount: 1 },
+		create: {
+			code: "CHAOMUNG10",
+			discountType: "Percentage",
+			discountValue: 10,
+			minimumOrderAmount: 300000,
+			usageLimit: 100,
+			usedCount: 1,
+			startsAt: new Date("2025-01-01"),
+			expiresAt: new Date("2030-01-01"),
+		},
+	});
+	const seededOrder = await prisma.order.findUnique({ where: { orderNumber: "HT-SEED-001" } });
+	if (seededOrder)
+		await prisma.couponUsage.upsert({
+			where: { couponId_orderId: { couponId: coupon.id, orderId: seededOrder.id } },
+			update: {},
+			create: { couponId: coupon.id, orderId: seededOrder.id, discountAmount: 84000 },
+		});
 	console.log(`Seeded admin ${admin.email}, categories ${honey.name}/${turmeric.name}`);
 }
 
