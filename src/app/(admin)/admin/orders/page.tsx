@@ -17,7 +17,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
 
 	return (
 		<AdminShell>
-			<h1 className='mb-6 font-serif text-2xl font-semibold text-foreground'>Đơn hàng</h1>
+			<h1 className='mb-6 font-sans text-2xl font-bold text-foreground'>Đơn hàng</h1>
 			<OrderTable orders={result.items} />
 
 			<Pagination page={result.page} totalPages={result.totalPages} basePath={paths.admin.orders} />

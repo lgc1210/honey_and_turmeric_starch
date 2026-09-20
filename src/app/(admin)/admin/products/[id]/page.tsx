@@ -19,7 +19,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
 	return (
 		<AdminShell>
-			<h1 className='mb-6 font-serif text-2xl font-semibold text-foreground'>{product.name}</h1>
+			<h1 className='mb-6 font-sans text-2xl font-bold text-foreground'>{product.name}</h1>
 
 			<ProductEditForm
 				product={{

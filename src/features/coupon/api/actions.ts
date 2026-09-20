@@ -7,8 +7,7 @@ import { getCurrentAdmin } from "@/features/auth/api/session";
 import { couponSchema, couponStatusSchema, deleteCouponSchema, updateCouponSchema } from "../schema";
 import { createCoupon, deleteCoupon, updateCoupon, updateCouponStatus } from "./service";
 import paths from "@/config/path";
-
-const notAuthenticatedError = { success: false, error: "Bạn chưa đăng nhập" } as const;
+import { notAuthenticatedError } from "@/config/common-errors";
 
 export async function createCouponAction(input: unknown): Promise<ActionResult<unknown>> {
 	if (!(await getCurrentAdmin())) return notAuthenticatedError;

@@ -22,7 +22,7 @@ export const productVariantSchema = z.object({
 	price: z.coerce.number().positive("Giá phải lớn hơn 0").max(999_999_999_999_9),
 	oldPrice: z.coerce.number().positive().optional().nullable(),
 	stockQuantity: z.coerce.number().int("Số lượng phải là số nguyên").min(0, "Số lượng không được âm").default(0),
-	status: EntityStatusEnum.default("Active"),
+	status: EntityStatusEnum.default(EntityStatus.Active),
 	optionValueIds: z.array(z.coerce.number()).default([]),
 });
 
@@ -31,7 +31,7 @@ export const createProductSchema = z.object({
 	name: z.string().min(1, "Tên sản phẩm không được để trống").max(255),
 	slug: z.string().min(1).max(255).optional(),
 	description: z.string().optional(),
-	status: EntityStatusEnum.default("Active"),
+	status: EntityStatusEnum.default(EntityStatus.Active),
 	options: z.array(productOptionSchema).default([]),
 	variants: z.array(productVariantSchema).min(1, "Cần ít nhất một biến thể"),
 });

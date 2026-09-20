@@ -77,7 +77,7 @@ export function ProductEditForm({ product, categories }: { product: ProductDetai
 			</div>
 			<div className='md:col-span-4'>
 				{serverError && <p className='mb-2 text-sm text-destructive'>{serverError}</p>}
-				<Button type='submit' disabled={form.formState.isSubmitting}>
+				<Button type='submit' size='lg' disabled={form.formState.isSubmitting}>
 					{form.formState.isSubmitting ? "Đang lưu..." : "Lưu sản phẩm"}
 				</Button>
 			</div>

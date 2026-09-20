@@ -15,11 +15,8 @@ export function serialize<T>(value: T): Serialized<T> {
 	if (value instanceof Prisma.Decimal) return value.toString() as Serialized<T>;
 	if (value instanceof Date) return value.toISOString() as Serialized<T>;
 	if (Array.isArray(value)) return value.map((item) => serialize(item)) as Serialized<T>;
-
-	if (value && typeof value === "object") {
+	if (value && typeof value === "object")
 		return Object.fromEntries(Object.entries(value).map(([key, val]) => [key, serialize(val)])) as Serialized<T>;
-	}
-
 	return value as Serialized<T>;
 }
 

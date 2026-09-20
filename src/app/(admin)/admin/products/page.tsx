@@ -9,6 +9,7 @@ import { ProductFilters } from "@/features/product/components/product-filters";
 import { ProductTable } from "@/features/product/components/product-table";
 import type { SearchParams } from "@/types/common";
 import paths from "@/config/path";
+import { Plus } from "lucide-react";
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
 	const rawParams = await searchParams;
@@ -25,7 +26,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 		<AdminShell>
 			<div className='mb-6 flex items-center justify-between'>
 				<h1 className='font-sans text-2xl font-bold text-foreground'>Sản phẩm</h1>
-				<Button render={<Link href={paths.admin.newProduct} />}>+ Thêm sản phẩm mới</Button>
+				<Button size='lg' className='cursor-pointer'>
+					<Plus />
+					<Link href={paths.admin.newProduct}>Thêm sản phẩm mới</Link>
+				</Button>
 			</div>
 			<ProductFilters categories={categories} />
 			<ProductTable products={result.items} />

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
+import paths from "@/config/path";
 
 export default function AdminPage() {
-	redirect("/admin/dashboard");
+	redirect(paths.admin.dashboard);
 }

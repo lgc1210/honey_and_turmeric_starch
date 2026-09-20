@@ -23,8 +23,7 @@ import {
 	type LoginResult,
 } from "./service";
 import paths from "@/config/path";
-
-const notAuthenticatedError = { success: false, error: "Bạn chưa đăng nhập" } as const;
+import { notAuthenticatedError } from "@/config/common-errors";
 
 async function requireCurrentAdminId() {
 	const admin = await getCurrentAdmin();

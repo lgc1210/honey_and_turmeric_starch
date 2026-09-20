@@ -7,10 +7,12 @@ export const siteConfig = Object.freeze({
 export const CART_COOKIE_NAME = "cart_id";
 export const CART_TTL_DAYS = 30;
 
+export const ADMIN_SIDEBAR_COLLAPSE_COOKIE = "admin_sidebar_collapsed";
+
 export const PAGINATION = Object.freeze({
 	DEFAULT_PAGE: 1,
 	DEFAULT_PAGE_SIZE: 12,
-	ADMIN_PAGE_SIZE: 10,
+	ADMIN_PAGE_SIZE: 20,
 	MAX_PAGE_SIZE: 100,
 } as const);
 

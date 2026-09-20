@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { enableTwoFactorSchema, disableTwoFactorSchema } from "../schema";
 import { disableTwoFactorAction, enableTwoFactorAction, setupTwoFactorAction } from "../api/actions";
+import Image from "next/image";
 
 export function TwoFactorPanel({ isEnabled }: { isEnabled: boolean }) {
 	const router = useRouter();
@@ -93,8 +94,7 @@ export function TwoFactorPanel({ isEnabled }: { isEnabled: boolean }) {
 					Quét mã QR dưới đây bằng Google Authenticator (hoặc ứng dụng TOTP tương thích), hoặc nhập thủ công secret key
 					nếu không quét được, sau đó nhập mã 6 số để xác nhận.
 				</p>
-				{/* eslint-disable-next-line @next/next/no-img-element -- ảnh QR dạng data URL sinh động, không cần next/image */}
-				<img
+				<Image
 					src={setupState.qrCodeDataUrl}
 					alt='Mã QR để quét bằng Google Authenticator'
 					width={220}
@@ -112,7 +112,7 @@ export function TwoFactorPanel({ isEnabled }: { isEnabled: boolean }) {
 					)}
 				</div>
 				{error && <p className='text-sm text-destructive'>{error}</p>}
-				<div className='flex gap-2'>
+				<div className='flex gap-1'>
 					<Button type='submit' disabled={enableForm.formState.isSubmitting}>
 						Xác nhận bật 2FA
 					</Button>
@@ -167,7 +167,9 @@ export function TwoFactorPanel({ isEnabled }: { isEnabled: boolean }) {
 				<span className='text-sm text-muted-foreground'>Bật 2FA để tăng cường bảo mật cho tài khoản admin.</span>
 			</div>
 			{error && <p className='text-sm text-destructive'>{error}</p>}
-			<Button onClick={startSetup}>Bật xác thực 2 lớp</Button>
+			<Button size='lg' onClick={startSetup}>
+				Bật xác thực 2 lớp
+			</Button>
 		</div>
 	);
 }

@@ -95,7 +95,7 @@ export function CouponForm() {
 
 			<div className='md:col-span-4'>
 				{serverError && <p className='mb-2 text-sm text-destructive'>{serverError}</p>}
-				<Button type='submit' disabled={isSubmitting}>
+				<Button type='submit' size='lg' disabled={isSubmitting}>
 					{isSubmitting ? "Đang tạo..." : "Thêm mã giảm giá"}
 				</Button>
 			</div>
