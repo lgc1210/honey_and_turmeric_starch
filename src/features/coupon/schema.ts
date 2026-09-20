@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DiscountType } from "@/generated/prisma/enums";
+import { DiscountType, EntityStatus } from "@/generated/prisma/enums";
 
 export const DiscountTypeEnum = z.enum(DiscountType);
 
@@ -16,7 +16,7 @@ export const couponSchema = z
 		usageLimit: z.coerce.number().int().positive().optional().nullable(),
 		startsAt: z.coerce.date(),
 		expiresAt: z.coerce.date(),
-		status: z.enum(["Active", "InActive"]).default("Active"),
+		status: z.enum(EntityStatus).default(EntityStatus.Active),
 	})
 	.refine((data) => data.expiresAt > data.startsAt, {
 		message: "Ngày hết hạn phải sau ngày bắt đầu",
@@ -33,7 +33,20 @@ export const updateCouponSchema = z.object({ id: z.coerce.number() }).and(coupon
 
 export const couponStatusSchema = z.object({
 	id: z.coerce.number(),
-	status: z.enum(["Active", "InActive"]),
+	status: z.enum(EntityStatus),
 });
 
 export type UpdateCouponInput = z.infer<typeof updateCouponSchema>;
+
+export const deleteCouponSchema = z.object({
+	id: z.coerce.number(),
+});
+
+export const couponQuerySchema = z.object({
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(100).optional(),
+	search: z.string().trim().min(1).optional(),
+	status: z.enum(EntityStatus).optional(),
+});
+
+export type CouponQuery = z.infer<typeof couponQuerySchema>;

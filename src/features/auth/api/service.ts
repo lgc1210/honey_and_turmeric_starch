@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import {
 	clearPendingTwoFactorChallenge,
@@ -34,9 +35,10 @@ export async function loginAdmin(input: LoginInput): Promise<LoginResult> {
 		include: { twoFactorSettings: true },
 	});
 
-	if (!admin || !(await verifyPassword(input.password, admin.passwordHash))) {
-		throw new Error("Email hoặc mật khẩu không đúng");
-	}
+	if (!admin) throw new Error("Email không tồn tại trong hệ thống");
+
+	const isPasswordCorrect = await verifyPassword(input.password, admin.passwordHash);
+	if (!isPasswordCorrect) throw new Error("Mật khẩu không đúng");
 
 	if (admin.twoFactorSettings?.isEnabled) {
 		await establishPendingTwoFactorChallenge(admin.id);
@@ -52,7 +54,11 @@ async function requirePendingTwoFactorAdmin() {
 	const adminId = await getPendingTwoFactorAdminId();
 	if (!adminId) throw new Error("Phiên xác thực đã hết hạn, vui lòng đăng nhập lại");
 
-	const admin = await prisma.admin.findUnique({ where: { id: adminId }, include: { twoFactorSettings: true } });
+	const admin = await prisma.admin.findUnique({
+		where: { id: adminId },
+		include: { twoFactorSettings: true },
+	});
+
 	if (!admin?.twoFactorSettings?.isEnabled) throw new Error("Phiên xác thực đã hết hạn, vui lòng đăng nhập lại");
 
 	return admin;
@@ -91,8 +97,12 @@ export async function verifyBackupCodeLogin(code: string, remember: boolean): Pr
 	return { email: admin.email };
 }
 
-/** Sinh secret + otpauth URI mới, lưu tạm ở trạng thái CHƯA bật (isEnabled vẫn false) chờ xác nhận OTP. */
-export async function setupTwoFactor(adminId: bigint): Promise<{ otpauthUri: string; secret: string }> {
+/** Sinh secret + otpauth URI mới, lưu tạm ở trạng thái CHƯA bật (isEnabled vẫn false) chờ xác nhận OTP.
+ * Kèm ảnh QR (data URL) sinh ngay trên server để admin quét bằng Google Authenticator,
+ * không cần thêm thư viện QR ở phía client (giữ bundle client nhẹ). */
+export async function setupTwoFactor(
+	adminId: bigint,
+): Promise<{ otpauthUri: string; secret: string; qrCodeDataUrl: string }> {
 	const admin = await prisma.admin.findUniqueOrThrow({ where: { id: adminId } });
 	const { secret, otpauthUri, encryptedSecret } = await generateTwoFactorSecret(admin.email);
 
@@ -102,7 +112,9 @@ export async function setupTwoFactor(adminId: bigint): Promise<{ otpauthUri: str
 		create: { adminId, twoFactorSecret: encryptedSecret, isEnabled: false },
 	});
 
-	return { otpauthUri, secret };
+	const qrCodeDataUrl = await QRCode.toDataURL(otpauthUri, { margin: 1, width: 220 });
+
+	return { otpauthUri, secret, qrCodeDataUrl };
 }
 
 /** Xác nhận OTP hợp lệ với secret vừa setup -> chính thức bật 2FA, sinh backup codes. */
@@ -133,7 +145,11 @@ export async function disableTwoFactor(adminId: bigint, password: string): Promi
 }
 
 /** Đổi mật khẩu admin — yêu cầu xác nhận mật khẩu hiện tại. */
-export async function changeAdminPassword(adminId: bigint, currentPassword: string, newPassword: string): Promise<void> {
+export async function changeAdminPassword(
+	adminId: bigint,
+	currentPassword: string,
+	newPassword: string,
+): Promise<void> {
 	const admin = await prisma.admin.findUniqueOrThrow({ where: { id: adminId } });
 	if (!(await verifyPassword(currentPassword, admin.passwordHash))) throw new Error("Mật khẩu hiện tại không đúng");
 

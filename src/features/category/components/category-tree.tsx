@@ -89,7 +89,7 @@ function TreeItem({ node, depth, allCategories }: { node: TreeNode; depth: numbe
 	return (
 		<li>
 			<div
-				className='flex flex-wrap items-center gap-2 border border-border px-3 py-2 select-none hover:bg-gray-200/50'
+				className='flex flex-wrap items-center gap-1 border border-border px-3 py-2 select-none hover:bg-gray-200/50'
 				style={{ marginLeft: depth * 20 }}
 				onClick={() => setExpanded((v) => !v)}>
 				<button
@@ -102,15 +102,15 @@ function TreeItem({ node, depth, allCategories }: { node: TreeNode; depth: numbe
 
 				<span className='flex-1 truncate text-sm font-medium text-foreground'>{node.name}</span>
 				<span className='text-xs text-muted-foreground'>{node._count.products} sản phẩm</span>
-				<Badge variant={node.status === EntityStatus.Active ? "default" : "outline"}>
+				<Badge variant={node.status === EntityStatus.Active ? "default" : "destructive"}>
 					{node.status === EntityStatus.Active ? "Đang bán" : "Ngừng bán"}
 				</Badge>
-				<Button variant='outline' size='xs' disabled={pending} onClick={toggleStatus}>
+				<Button variant='outline' size='sm' disabled={pending} onClick={toggleStatus}>
 					{node.status === EntityStatus.Active ? "Ngừng bán" : "Kích hoạt"}
 				</Button>
 				<Button
 					variant='outline'
-					size='xs'
+					size='sm'
 					onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 						e.stopPropagation();
 						setEditing(true);
@@ -119,7 +119,7 @@ function TreeItem({ node, depth, allCategories }: { node: TreeNode; depth: numbe
 				</Button>
 				<Button
 					variant='destructive'
-					size='xs'
+					size='sm'
 					disabled={pending}
 					onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 						e.stopPropagation();

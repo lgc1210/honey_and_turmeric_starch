@@ -10,7 +10,7 @@ export const CART_TTL_DAYS = 30;
 export const PAGINATION = Object.freeze({
 	DEFAULT_PAGE: 1,
 	DEFAULT_PAGE_SIZE: 12,
-	ADMIN_PAGE_SIZE: 20,
+	ADMIN_PAGE_SIZE: 10,
 	MAX_PAGE_SIZE: 100,
 } as const);
 

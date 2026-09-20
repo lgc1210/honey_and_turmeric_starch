@@ -26,8 +26,8 @@ function timingSafeStringEqual(a: string, b: string): boolean {
 }
 
 function buildToken(purpose: string, adminId: bigint): string {
-	const value = `${purpose}:${adminId.toString()}`;
-	return `${value}.${sign(value)}`;
+	const value = `${purpose}:${adminId.toString()}`; // session:1
+	return `${value}.${sign(value)}`; // session:1.
 }
 
 function parseToken(purpose: string, token: string): bigint | null {

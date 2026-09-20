@@ -48,7 +48,7 @@ function AlertDialogTitle({ className, ...props }: React.ComponentProps<typeof A
 	return (
 		<AlertDialogPrimitive.Title
 			data-slot='alert-dialog-title'
-			className={cn("font-serif text-lg font-semibold text-foreground", className)}
+			className={cn("font-sans text-lg font-semibold text-foreground", className)}
 			{...props}
 		/>
 	);
@@ -68,7 +68,7 @@ function AlertDialogDescription({
 }
 
 function AlertDialogFooter({ className, ...props }: React.ComponentProps<"div">) {
-	return <div data-slot='alert-dialog-footer' className={cn("mt-6 flex justify-end gap-2", className)} {...props} />;
+	return <div data-slot='alert-dialog-footer' className={cn("mt-6 flex justify-end gap-1", className)} {...props} />;
 }
 
 function AlertDialogClose(props: React.ComponentProps<typeof AlertDialogPrimitive.Close>) {

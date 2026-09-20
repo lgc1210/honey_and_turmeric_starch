@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
 import { serialize } from "@/lib/serialize";
 import type { CreateCategoryInput, UpdateCategoryInput } from "../schema";
-import { EntityStatus } from "@/generated/prisma/enums";
 
 async function uniqueCategorySlug(input: string, excludeId?: bigint): Promise<string> {
 	const base = slugify(input) || "danh-muc";
@@ -52,11 +51,11 @@ export async function getAdminCategories() {
 	return serialize(categories);
 }
 
-/** Danh mục đang Active — dùng cho select trong form sản phẩm. */
+/** Danh mục đang Active — dùng cho select trong form sản phẩm (kèm parentId để dựng dạng cây). */
 export async function getActiveCategoryOptions() {
 	const categories = await prisma.category.findMany({
-		where: { status: EntityStatus.Active },
-		select: { id: true, name: true },
+		where: { status: "Active" },
+		select: { id: true, name: true, parentId: true },
 		orderBy: { name: "asc" },
 	});
 	return serialize(categories);
@@ -102,8 +101,8 @@ export async function updateCategory(input: UpdateCategoryInput) {
 	return serialize(category);
 }
 
-export async function updateCategoryStatus(id: bigint, status: EntityStatus) {
-	if (status === EntityStatus.InActive) {
+export async function updateCategoryStatus(id: bigint, status: "Active" | "InActive") {
+	if (status === "InActive") {
 		await assertNoChildrenOrProducts(id, "ngừng bán");
 	}
 

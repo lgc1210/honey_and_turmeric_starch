@@ -90,43 +90,6 @@ async function main() {
 		update: {},
 		create: { productId: turmericProduct.id, sku: "NGHE-200", name: "200g", price: 180000, stockQuantity: 35 },
 	});
-	const cart = await prisma.cart.upsert({ where: { id: "seed-cart" }, update: {}, create: { id: "seed-cart" } });
-	const item = await prisma.cartItem.upsert({
-		where: { cartId_productVariantId: { cartId: cart.id, productVariantId: variant.id } },
-		update: {},
-		create: { cartId: cart.id, productVariantId: variant.id, quantity: 2 },
-	});
-	const existingOrder = await prisma.order.findUnique({ where: { orderNumber: "HT-SEED-001" } });
-	if (!existingOrder) {
-		await prisma.order.create({
-			data: {
-				cartId: cart.id,
-				orderNumber: "HT-SEED-001",
-				recipientName: "Nguyễn Thị Lan",
-				recipientEmail: "lan@example.com",
-				recipientPhone: "0900000000",
-				shippingProvince: "Hà Nội",
-				shippingDistrict: "Cầu Giấy",
-				shippingWard: "Dịch Vọng",
-				shippingAddress: "1 Đường Mẫu",
-				subtotal: 840000,
-				totalAmount: 840000,
-				status: "Confirmed",
-				items: {
-					create: {
-						productVariantId: variant.id,
-						productName: product.name,
-						sku: variant.sku,
-						variantName: variant.name,
-						unitPrice: variant.price,
-						quantity: item.quantity,
-						subtotal: 840000,
-					},
-				},
-				payments: { create: { provider: "COD", amount: 840000, status: "Pending" } },
-			},
-		});
-	}
 	const coupon = await prisma.coupon.upsert({
 		where: { code: "CHAOMUNG10" },
 		update: { usedCount: 1 },

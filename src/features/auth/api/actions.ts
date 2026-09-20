@@ -49,7 +49,9 @@ export async function logoutAction(): Promise<void> {
 	revalidatePath("/admin");
 }
 
-export async function setupTwoFactorAction(): Promise<ActionResult<{ otpauthUri: string; secret: string }>> {
+export async function setupTwoFactorAction(): Promise<
+	ActionResult<{ otpauthUri: string; secret: string; qrCodeDataUrl: string }>
+> {
 	const adminId = await requireCurrentAdminId();
 	if (!adminId) return notAuthenticatedError;
 

@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { Pagination } from "@/components/ui/pagination";
 import { getAdminOrders } from "@/features/order/api/service";
 import { OrderTable } from "@/features/order/components/order-table";
 import type { SearchParams } from "@/types/common";
+import paths from "@/config/path";
 
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
 	const params = await searchParams;
@@ -16,18 +17,10 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
 
 	return (
 		<AdminShell>
-			<h1 className="mb-6 font-serif text-2xl font-semibold text-foreground">Đơn hàng</h1>
+			<h1 className='mb-6 font-serif text-2xl font-semibold text-foreground'>Đơn hàng</h1>
 			<OrderTable orders={result.items} />
 
-			{result.totalPages > 1 && (
-				<div className="mt-4 flex gap-2">
-					{Array.from({ length: result.totalPages }, (_, i) => i + 1).map((p) => (
-						<Link key={p} href={`/admin/orders?page=${p}`} className="border border-border px-3 py-1 text-sm">
-							{p}
-						</Link>
-					))}
-				</div>
-			)}
+			<Pagination page={result.page} totalPages={result.totalPages} basePath={paths.admin.orders} />
 		</AdminShell>
 	);
 }

@@ -51,6 +51,18 @@ export function normalizeOptionValue(value: string) {
 		.replace(/\s+/g, " ");
 }
 
+/** Sinh gợi ý SKU từ tên biến thể: "Đỏ / Size M" -> "DO-SIZE-M" */
+export function generateSkuFromName(name: string): string {
+	return slugify(name).toUpperCase();
+}
+
+/** Định dạng Date thành giá trị dùng cho <input type="datetime-local"> (YYYY-MM-DDTHH:mm, theo giờ local). */
+export function toDatetimeLocalValue(date: Date | string): string {
+	const d = typeof date === "string" ? new Date(date) : date;
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 /** Sinh order_number: "HT20260915-A3F9K2" */
 export function generateOrderNumber() {
 	const now = new Date();

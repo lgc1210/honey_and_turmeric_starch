@@ -21,24 +21,22 @@ export type CategoryRow = {
 type ViewMode = "list" | "tree";
 
 export function CategoryViewSwitcher({ categories }: { categories: CategoryRow[] }) {
-	const [view, setView] = useState<ViewMode>("list");
+	const [view, setView] = useState<ViewMode>("tree");
 
 	return (
 		<div className='mt-4'>
-			<div className='flex items-center gap-2'>
-				<Button
-					title='Hiển thị dạng danh sách'
-					variant={view === "list" ? "default" : "outline"}
-					size='sm'
-					onClick={() => setView("list")}>
-					<List className='size-4' />
-				</Button>
+			<div className='flex items-center gap-1'>
 				<Button
 					title='Hiển thị dạng cây'
 					variant={view === "tree" ? "default" : "outline"}
-					size='sm'
 					onClick={() => setView("tree")}>
 					<ListTree className='size-4' />
+				</Button>
+				<Button
+					title='Hiển thị dạng danh sách'
+					variant={view === "list" ? "default" : "outline"}
+					onClick={() => setView("list")}>
+					<List className='size-4' />
 				</Button>
 			</div>
 

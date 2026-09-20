@@ -7,22 +7,30 @@ import { getCurrentAdmin } from "@/features/auth/api/session";
 import {
 	createProductSchema,
 	createVariantSchema,
-	productImageSchema,
+	deleteImageSchema,
+	deleteProductSchema,
+	deleteVariantSchema,
 	productStatusSchema,
+	setPrimaryImageSchema,
 	updateProductSchema,
 	updateVariantSchema,
+	uploadProductImageSchema,
 	variantStatusSchema,
 } from "../schema";
 import {
 	createProduct,
 	createVariant,
 	deleteImage,
+	deleteProduct,
+	deleteVariant,
+	setPrimaryImage,
 	updateProduct,
 	updateProductStatus,
 	updateVariant,
 	updateVariantStatus,
-	upsertImage,
+	uploadProductImage,
 } from "./service";
+import paths from "@/config/path";
 
 const notAuthenticatedError = { success: false, error: "Bạn chưa đăng nhập" } as const;
 
@@ -31,7 +39,7 @@ export async function createProductAction(input: unknown): Promise<ActionResult<
 
 	return handleAction(createProductSchema, input, async (data) => {
 		const product = await createProduct(data);
-		revalidatePath("/admin/products");
+		revalidatePath(paths.admin.products);
 		return product;
 	});
 }
@@ -41,7 +49,7 @@ export async function updateProductAction(input: unknown): Promise<ActionResult<
 
 	return handleAction(updateProductSchema, input, async (data) => {
 		const product = await updateProduct(data);
-		revalidatePath("/admin/products");
+		revalidatePath(paths.admin.products);
 		revalidatePath(`/admin/products/${data.id}`);
 		return product;
 	});
@@ -52,7 +60,17 @@ export async function updateProductStatusAction(input: unknown): Promise<ActionR
 
 	return handleAction(productStatusSchema, input, async ({ id, status }) => {
 		await updateProductStatus(BigInt(id), status);
-		revalidatePath("/admin/products");
+		revalidatePath(paths.admin.products);
+		return undefined;
+	});
+}
+
+export async function deleteProductAction(input: unknown): Promise<ActionResult<undefined>> {
+	if (!(await getCurrentAdmin())) return notAuthenticatedError;
+
+	return handleAction(deleteProductSchema, input, async ({ id }) => {
+		await deleteProduct(BigInt(id));
+		revalidatePath(paths.admin.products);
 		return undefined;
 	});
 }
@@ -82,26 +100,47 @@ export async function updateVariantStatusAction(input: unknown): Promise<ActionR
 
 	return handleAction(variantStatusSchema, input, async ({ id, status }) => {
 		await updateVariantStatus(BigInt(id), status);
-		revalidatePath("/admin/products");
+		revalidatePath(paths.admin.products);
 		return undefined;
 	});
 }
 
-export async function upsertImageAction(input: unknown): Promise<ActionResult<unknown>> {
+export async function deleteVariantAction(input: unknown): Promise<ActionResult<undefined>> {
 	if (!(await getCurrentAdmin())) return notAuthenticatedError;
 
-	return handleAction(productImageSchema, input, async (data) => {
-		const image = await upsertImage(data);
-		revalidatePath("/admin/products");
+	return handleAction(deleteVariantSchema, input, async ({ id }) => {
+		await deleteVariant(BigInt(id));
+		revalidatePath(paths.admin.products);
+		return undefined;
+	});
+}
+
+export async function uploadProductImageAction(input: unknown): Promise<ActionResult<unknown>> {
+	if (!(await getCurrentAdmin())) return notAuthenticatedError;
+
+	return handleAction(uploadProductImageSchema, input, async (data) => {
+		const image = await uploadProductImage(data);
+		revalidatePath(paths.admin.products);
 		return image;
 	});
 }
 
-export async function deleteImageAction(id: string): Promise<ActionResult<undefined>> {
+export async function setPrimaryImageAction(input: unknown): Promise<ActionResult<undefined>> {
 	if (!(await getCurrentAdmin())) return notAuthenticatedError;
-	if (!/^\d+$/.test(id)) return { success: false, error: "Dữ liệu không hợp lệ" };
 
-	await deleteImage(BigInt(id));
-	revalidatePath("/admin/products");
-	return { success: true, data: undefined };
+	return handleAction(setPrimaryImageSchema, input, async ({ id }) => {
+		await setPrimaryImage(BigInt(id));
+		revalidatePath(paths.admin.products);
+		return undefined;
+	});
+}
+
+export async function deleteImageAction(input: unknown): Promise<ActionResult<undefined>> {
+	if (!(await getCurrentAdmin())) return notAuthenticatedError;
+
+	return handleAction(deleteImageSchema, input, async ({ id }) => {
+		await deleteImage(BigInt(id));
+		revalidatePath(paths.admin.products);
+		return undefined;
+	});
 }

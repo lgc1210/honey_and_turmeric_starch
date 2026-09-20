@@ -8,7 +8,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginSchema, backupCodeSchema, twoFactorVerifySchema } from "../schema";
+import { loginSchema, backupCodeSchema, twoFactorVerifySchema, LoginInput } from "../schema";
 import { loginAction, verifyBackupCodeAction, verifyTwoFactorAction } from "../api/actions";
 import paths from "@/config/path";
 
@@ -35,7 +35,7 @@ export function LoginForm() {
 		defaultValues: { code: "", remember: false },
 	});
 
-	async function onSubmitCredentials(values: z.infer<typeof loginSchema>) {
+	async function onSubmitCredentials(values: LoginInput) {
 		setServerError("");
 		const result = await loginAction(values);
 		if (!result.success) {
@@ -58,7 +58,7 @@ export function LoginForm() {
 			setServerError(result.error);
 			return;
 		}
-		router.push("/admin/dashboard");
+		router.push(paths.admin.dashboard);
 		router.refresh();
 	}
 
@@ -69,7 +69,7 @@ export function LoginForm() {
 			setServerError(result.error);
 			return;
 		}
-		router.push("/admin/dashboard");
+		router.push(paths.admin.dashboard);
 		router.refresh();
 	}
 

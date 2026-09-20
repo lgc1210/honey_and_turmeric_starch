@@ -2,6 +2,7 @@ export default Object.freeze({
 	admin: {
 		auth: "/admin/auth",
 		products: "/admin/products",
+		newProduct: "/admin/products/new",
 		categories: "/admin/categories",
 		orders: "/admin/orders",
 		accounts: "/admin/accounts",

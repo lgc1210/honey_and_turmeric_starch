@@ -55,6 +55,10 @@ export const productStatusSchema = z.object({
 	status: EntityStatusEnum,
 });
 
+export const deleteProductSchema = z.object({
+	id: z.coerce.number(),
+});
+
 export const createVariantSchema = z.object({
 	productId: z.coerce.number(),
 	sku: productVariantSchema.shape.sku,
@@ -74,13 +78,40 @@ export const variantStatusSchema = z.object({
 	status: EntityStatusEnum,
 });
 
+export const deleteVariantSchema = z.object({
+	id: z.coerce.number(),
+});
+
 export const productImageSchema = z.object({
 	id: z.coerce.number().optional(),
 	productVariantId: z.coerce.number(),
-	url: z.url("URL ảnh không hợp lệ").max(500),
+	url: z.string().min(1).max(500),
 	altText: z.string().max(255).optional(),
 	sortOrder: z.coerce.number().int().min(0).default(0),
 	isPrimary: z.boolean().default(false),
+});
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+export const uploadProductImageSchema = z.object({
+	productVariantId: z.coerce.number(),
+	file: z
+		.instanceof(File, { message: "Vui lòng chọn ảnh" })
+		.refine((file) => file.size > 0, "Vui lòng chọn ảnh")
+		.refine((file) => file.size <= MAX_IMAGE_SIZE_BYTES, "Ảnh tối đa 5MB")
+		.refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), "Chỉ chấp nhận ảnh JPG, PNG, WEBP hoặc GIF"),
+	altText: z.string().max(255).optional(),
+	sortOrder: z.coerce.number().int().min(0).default(0),
+	isPrimary: z.boolean().default(false),
+});
+
+export const setPrimaryImageSchema = z.object({
+	id: z.coerce.number(),
+});
+
+export const deleteImageSchema = z.object({
+	id: z.coerce.number(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
@@ -89,3 +120,4 @@ export type ProductQuery = z.infer<typeof productQuerySchema>;
 export type CreateVariantInput = z.infer<typeof createVariantSchema>;
 export type UpdateVariantInput = z.infer<typeof updateVariantSchema>;
 export type ProductImageInput = z.infer<typeof productImageSchema>;
+export type UploadProductImageInput = z.infer<typeof uploadProductImageSchema>;

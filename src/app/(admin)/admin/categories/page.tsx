@@ -8,7 +8,7 @@ export default async function CategoriesPage() {
 
 	return (
 		<AdminShell>
-			<h1 className='mb-4 font-serif text-2xl font-semibold text-foreground'>Danh mục</h1>
+			<h1 className='mb-4 font-sans text-2xl font-bold text-foreground'>Danh mục</h1>
 			<CategoryForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} />
 			<CategoryViewSwitcher categories={categories} />
 		</AdminShell>

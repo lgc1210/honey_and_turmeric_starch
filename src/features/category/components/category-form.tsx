@@ -35,7 +35,7 @@ export function CategoryForm({ categories }: { categories: CategoryOption[] }) {
 	}
 
 	return (
-		<form className='grid gap-4 border-b border-border pb-6 md:grid-cols-4' onSubmit={form.handleSubmit(onSubmit)}>
+		<form className='grid gap-4 border-b border-border pb-4 md:grid-cols-4' onSubmit={form.handleSubmit(onSubmit)}>
 			<div className='space-y-2'>
 				<Label htmlFor='category-name'>Tên danh mục</Label>
 				<Input id='category-name' {...form.register("name")} />

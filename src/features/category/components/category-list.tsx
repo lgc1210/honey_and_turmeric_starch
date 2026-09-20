@@ -44,32 +44,35 @@ export function CategoryList({ categories }: { categories: CategoryRow[] }) {
 						<CategoryEditForm category={category} parentOptions={categories} onDone={() => setEditingId(null)} />
 					</div>
 				) : (
-					<div key={category.id} className='border border-border p-4'>
-						<div className='flex items-start justify-between gap-2'>
-							<h3 className='font-semibold text-foreground'>{category.name}</h3>
-							<Badge variant={category.status === EntityStatus.Active ? "default" : "outline"}>
-								{category.status === EntityStatus.Active ? "Đang bán" : "Ngừng bán"}
-							</Badge>
+					<div key={category.id} className='border border-border p-4 flex flex-col min-h-24'>
+						<div className='flex-1'>
+							<div className='flex items-start justify-between gap-2'>
+								<h3 className='font-semibold text-foreground'>{category.name}</h3>
+								<Badge variant={category.status === EntityStatus.Active ? "default" : "destructive"}>
+									{category.status === EntityStatus.Active ? "Đang bán" : "Ngừng bán"}
+								</Badge>
+							</div>
+							<p className='mt-2 text-sm text-muted-foreground'>
+								{category.slug} · {category._count.products} sản phẩm
+							</p>
+							{category.parent && <p className='mt-1 text-xs text-muted-foreground'>Thuộc: {category.parent.name}</p>}
+
+							{errorById[category.id] && <p className='mt-2 text-xs text-destructive'>{errorById[category.id]}</p>}
 						</div>
-						<p className='mt-2 text-sm text-muted-foreground'>
-							{category.slug} · {category._count.products} sản phẩm
-						</p>
-						{category.parent && <p className='mt-1 text-xs text-muted-foreground'>Thuộc: {category.parent.name}</p>}
 
-						{errorById[category.id] && <p className='mt-2 text-xs text-destructive'>{errorById[category.id]}</p>}
-
-						<div className='mt-3 flex flex-wrap gap-2'>
+						<div className='shink-0 mt-3 flex justify-between gap-1'>
 							<Button
 								variant='outline'
 								size='sm'
 								disabled={pendingId === category.id}
-								onClick={() => toggleStatus(category)}>
+								onClick={() => toggleStatus(category)}
+								className='flex-1'>
 								{category.status === EntityStatus.Active ? "Ngừng bán" : "Kích hoạt lại"}
 							</Button>
-							<Button variant='outline' size='sm' onClick={() => setEditingId(category.id)}>
+							<Button variant='outline' size='sm' onClick={() => setEditingId(category.id)} className='flex-1'>
 								Sửa
 							</Button>
-							<Button variant='destructive' size='sm' onClick={() => setDeletingCategory(category)}>
+							<Button variant='destructive' size='sm' onClick={() => setDeletingCategory(category)} className='flex-1'>
 								Xoá
 							</Button>
 						</div>

@@ -1,3 +1,6 @@
+import { randomUUID } from "node:crypto";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { slugify, normalizeOptionValue } from "@/lib/utils";
@@ -6,10 +9,10 @@ import { PAGINATION } from "@/config/site";
 import type {
 	CreateProductInput,
 	CreateVariantInput,
-	ProductImageInput,
 	ProductQuery,
 	UpdateProductInput,
 	UpdateVariantInput,
+	UploadProductImageInput,
 } from "../schema";
 
 async function uniqueProductSlug(input: string, excludeId?: bigint): Promise<string> {
@@ -94,65 +97,73 @@ export async function getAdminProductById(id: bigint) {
 }
 
 export async function createProduct(input: CreateProductInput) {
-	const category = await prisma.category.findUnique({ where: { id: BigInt(input.categoryId) } });
+	const category = await prisma.category.findUnique({
+		where: { id: BigInt(input.categoryId) },
+	});
 	if (!category) throw new Error("Danh mục không tồn tại");
 
-	const product = await prisma.$transaction(async (tx) => {
-		const created = await tx.product.create({
-			data: {
-				categoryId: BigInt(input.categoryId),
-				name: input.name,
-				slug: await uniqueProductSlug(input.slug || input.name),
-				description: input.description,
-				status: input.status,
-			},
-		});
-
-		// map "tên option + tên value" -> id, để gán vào variant.optionValueIds theo index
-		const optionValueIdByKey = new Map<string, bigint>();
-
-		for (const option of input.options ?? []) {
-			const createdOption = await tx.productOption.create({ data: { productId: created.id, name: option.name } });
-
-			for (const optionValue of option.values) {
-				const createdValue = await tx.productOptionValue.create({
-					data: {
-						optionId: createdOption.id,
-						value: optionValue.value,
-						normalizedValue: normalizeOptionValue(optionValue.value),
-					},
-				});
-				optionValueIdByKey.set(`${option.name}:${optionValue.value}`, createdValue.id);
-			}
-		}
-
-		for (const variant of input.variants) {
-			// optionValueIds gửi từ client ở bước tạo mới là index cục bộ (0, 1, 2...) trỏ tới
-			// option value vừa tạo ở trên theo thứ tự khai báo — quy ước này được xử lý ở component.
-			const optionValueIds = variant.optionValueIds
-				.map((index) => [...optionValueIdByKey.values()][index])
-				.filter((id): id is bigint => id !== undefined);
-
-			if (optionValueIds.length) await assertNoDuplicateCombination(tx, created.id, optionValueIds);
-
-			await tx.productVariant.create({
+	const product = await prisma.$transaction(
+		async (tx) => {
+			const created = await tx.product.create({
 				data: {
-					productId: created.id,
-					sku: variant.sku,
-					name: variant.name,
-					price: variant.price,
-					oldPrice: variant.oldPrice,
-					stockQuantity: variant.stockQuantity,
-					status: variant.status,
-					optionValues: optionValueIds.length
-						? { create: optionValueIds.map((optionValueId) => ({ optionValueId })) }
-						: undefined,
+					categoryId: BigInt(input.categoryId),
+					name: input.name,
+					// slug: await uniqueProductSlug(input.slug || input.name),
+					slug: input.slug || input.name,
+					description: input.description,
+					status: input.status,
 				},
 			});
-		}
 
-		return created;
-	});
+			// map "tên option + tên value" -> id, để gán vào variant.optionValueIds theo index
+			const optionValueIdByKey = new Map<string, bigint>();
+
+			for (const option of input.options ?? []) {
+				const createdOption = await tx.productOption.create({ data: { productId: created.id, name: option.name } });
+
+				for (const optionValue of option.values) {
+					const createdValue = await tx.productOptionValue.create({
+						data: {
+							optionId: createdOption.id,
+							value: optionValue.value,
+							normalizedValue: normalizeOptionValue(optionValue.value),
+						},
+					});
+					optionValueIdByKey.set(`${option.name}:${optionValue.value}`, createdValue.id);
+				}
+			}
+
+			for (const variant of input.variants) {
+				// optionValueIds gửi từ client ở bước tạo mới là index cục bộ (0, 1, 2...) trỏ tới
+				// option value vừa tạo ở trên theo thứ tự khai báo — quy ước này được xử lý ở component.
+				const optionValueIds = variant.optionValueIds
+					.map((index) => [...optionValueIdByKey.values()][index])
+					.filter((id): id is bigint => id !== undefined);
+
+				if (optionValueIds.length) await assertNoDuplicateCombination(tx, created.id, optionValueIds);
+
+				await tx.productVariant.create({
+					data: {
+						productId: created.id,
+						sku: variant.sku,
+						name: variant.name,
+						price: variant.price,
+						oldPrice: variant.oldPrice,
+						stockQuantity: variant.stockQuantity,
+						status: variant.status,
+						optionValues: optionValueIds.length
+							? { create: optionValueIds.map((optionValueId) => ({ optionValueId })) }
+							: undefined,
+					},
+				});
+			}
+
+			return created;
+		},
+		{
+			timeout: 50000,
+		},
+	);
 
 	return serialize(product);
 }
@@ -247,21 +258,135 @@ export async function updateVariantStatus(id: bigint, status: "Active" | "InActi
 	return serialize(variant);
 }
 
-export async function upsertImage(input: ProductImageInput) {
-	const data = {
-		url: input.url,
-		altText: input.altText,
-		sortOrder: input.sortOrder,
-		isPrimary: input.isPrimary,
-	};
+/** Xoá 1 biến thể — chặn nếu đã từng được đặt hàng (dữ liệu lịch sử đơn hàng không được đụng tới)
+ * hoặc là biến thể duy nhất còn lại của sản phẩm (sản phẩm luôn cần ít nhất 1 biến thể để bán được). */
+export async function deleteVariant(id: bigint): Promise<void> {
+	const variant = await prisma.productVariant.findUniqueOrThrow({ where: { id } });
 
-	const image = input.id
-		? await prisma.productImage.update({ where: { id: BigInt(input.id) }, data })
-		: await prisma.productImage.create({ data: { ...data, productVariantId: BigInt(input.productVariantId) } });
+	const orderCount = await prisma.orderItem.count({ where: { productVariantId: id } });
+	if (orderCount > 0) {
+		throw new Error("Không thể xoá biến thể đã từng được đặt hàng — hãy chuyển sang trạng thái Ngừng bán thay vì xoá");
+	}
+
+	const siblingCount = await prisma.productVariant.count({ where: { productId: variant.productId } });
+	if (siblingCount <= 1) {
+		throw new Error("Không thể xoá biến thể duy nhất của sản phẩm — hãy xoá cả sản phẩm hoặc thêm biến thể khác trước");
+	}
+
+	const images = await prisma.productImage.findMany({ where: { productVariantId: id } });
+
+	await prisma.$transaction([
+		prisma.cartItem.deleteMany({ where: { productVariantId: id } }),
+		prisma.productImage.deleteMany({ where: { productVariantId: id } }),
+		prisma.variantOptionValue.deleteMany({ where: { variantId: id } }),
+		prisma.productVariant.delete({ where: { id } }),
+	]);
+
+	await Promise.all(images.map((image) => deleteImageFile(image.url)));
+}
+
+/** Xoá toàn bộ sản phẩm (kèm option/variant/ảnh) — chặn nếu bất kỳ biến thể nào đã từng được đặt hàng. */
+export async function deleteProduct(id: bigint): Promise<void> {
+	const variantIds = (await prisma.productVariant.findMany({ where: { productId: id }, select: { id: true } })).map(
+		(v) => v.id,
+	);
+
+	if (variantIds.length > 0) {
+		const orderCount = await prisma.orderItem.count({ where: { productVariantId: { in: variantIds } } });
+		if (orderCount > 0) {
+			throw new Error(
+				"Không thể xoá sản phẩm đã có đơn hàng liên quan — hãy chuyển các biến thể sang Ngừng bán thay vì xoá",
+			);
+		}
+	}
+
+	const [images, optionIds] = await Promise.all([
+		prisma.productImage.findMany({ where: { productVariantId: { in: variantIds } } }),
+		prisma.productOption
+			.findMany({ where: { productId: id }, select: { id: true } })
+			.then((options) => options.map((o) => o.id)),
+	]);
+
+	await prisma.$transaction([
+		prisma.cartItem.deleteMany({ where: { productVariantId: { in: variantIds } } }),
+		prisma.productImage.deleteMany({ where: { productVariantId: { in: variantIds } } }),
+		prisma.variantOptionValue.deleteMany({ where: { variantId: { in: variantIds } } }),
+		prisma.productVariant.deleteMany({ where: { productId: id } }),
+		prisma.productOptionValue.deleteMany({ where: { optionId: { in: optionIds } } }),
+		prisma.productOption.deleteMany({ where: { productId: id } }),
+		prisma.product.delete({ where: { id } }),
+	]);
+
+	await Promise.all(images.map((image) => deleteImageFile(image.url)));
+}
+
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "products");
+const PUBLIC_UPLOAD_PATH = "/uploads/products";
+
+/**
+ * Lưu file ảnh vào ổ đĩa cục bộ (public/uploads/products). Phù hợp cho deploy
+ * dạng server chạy liên tục (VD: VPS, Docker); nếu sau này chuyển sang nền
+ * tảng serverless/edge (filesystem không bền), cần thay bằng object storage
+ * (S3/R2/Supabase Storage) — không làm trước vì hiện chưa cần (YAGNI).
+ */
+async function saveImageFile(file: File): Promise<string> {
+	await mkdir(UPLOAD_DIR, { recursive: true });
+
+	const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+	const filename = `${randomUUID()}.${ext}`;
+	const buffer = Buffer.from(await file.arrayBuffer());
+
+	await writeFile(path.join(UPLOAD_DIR, filename), buffer);
+	return `${PUBLIC_UPLOAD_PATH}/${filename}`;
+}
+
+async function deleteImageFile(url: string): Promise<void> {
+	if (!url.startsWith(PUBLIC_UPLOAD_PATH)) return; // ảnh không phải do hệ thống upload (dữ liệu cũ) thì bỏ qua
+
+	const filename = url.slice(PUBLIC_UPLOAD_PATH.length + 1);
+	await unlink(path.join(UPLOAD_DIR, filename)).catch(() => undefined); // file có thể đã bị xoá thủ công, không chặn thao tác DB
+}
+
+export async function uploadProductImage(input: UploadProductImageInput) {
+	const url = await saveImageFile(input.file);
+
+	const image = await prisma.$transaction(async (tx) => {
+		if (input.isPrimary) {
+			await tx.productImage.updateMany({
+				where: { productVariantId: BigInt(input.productVariantId), isPrimary: true },
+				data: { isPrimary: false },
+			});
+		}
+
+		return tx.productImage.create({
+			data: {
+				productVariantId: BigInt(input.productVariantId),
+				url,
+				altText: input.altText,
+				sortOrder: input.sortOrder,
+				isPrimary: input.isPrimary,
+			},
+		});
+	});
 
 	return serialize(image);
 }
 
+/** Đặt 1 ảnh làm ảnh chính của variant — tự động bỏ cờ ảnh chính cũ (mỗi variant chỉ có 1 ảnh chính). */
+export async function setPrimaryImage(id: bigint) {
+	const image = await prisma.productImage.findUniqueOrThrow({ where: { id } });
+
+	await prisma.$transaction([
+		prisma.productImage.updateMany({
+			where: { productVariantId: image.productVariantId, isPrimary: true },
+			data: { isPrimary: false },
+		}),
+		prisma.productImage.update({ where: { id }, data: { isPrimary: true } }),
+	]);
+}
+
 export async function deleteImage(id: bigint) {
+	const image = await prisma.productImage.findUniqueOrThrow({ where: { id } });
 	await prisma.productImage.delete({ where: { id } });
+	await deleteImageFile(image.url);
 }

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { logoutAction } from "@/features/auth/api/actions";
 import { Button } from "@/components/ui/button";
 import paths from "@/config/path";
-import { House, ChartBarStacked, Package, Ticket, ShoppingBasket, Users } from "lucide-react";
+import { House, ChartBarStacked, Package, Ticket, ShoppingBasket, Users, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
 	{ href: paths.admin.dashboard, label: "Tổng quan", icon: House },
@@ -52,8 +52,9 @@ export default function AdminSidebar({ adminEmail }: AdminSidebarProps) {
 			<div className='border-t border-border p-3'>
 				<p className='truncate px-1 text-xs text-muted-foreground'>{adminEmail}</p>
 				<form action={logoutAction}>
-					<Button type='submit' variant='outline' size='sm' className='mt-2 w-full'>
-						Đăng xuất
+					<Button type='submit' variant='outline' size='sm' className='mt-2 w-full flex items-center gap-2'>
+						<span>Đăng xuất</span>
+						<LogOut className='size-3' />
 					</Button>
 				</form>
 			</div>
