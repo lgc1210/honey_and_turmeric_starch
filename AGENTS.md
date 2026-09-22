@@ -81,13 +81,13 @@ Không làm:
 // ❌ Nhồi hết logic vào Server Action, không tách service
 "use server";
 export async function checkoutAction(input: unknown) {
-  // validate
-  // query cart
-  // check stock
-  // calculate price
-  // create order
-  // create payment
-  // ...
+	// validate
+	// query cart
+	// check stock
+	// calculate price
+	// create order
+	// create payment
+	// ...
 }
 ```
 
@@ -275,13 +275,13 @@ Conceptual payload sau khi decrypt:
 
 ```json
 {
-  "id": "cart_xxx",
-  "items": [
-    {
-      "variantId": 123,
-      "quantity": 2
-    }
-  ]
+	"id": "cart_xxx",
+	"items": [
+		{
+			"variantId": 123,
+			"quantity": 2
+		}
+	]
 }
 ```
 
@@ -481,7 +481,6 @@ recipientEmail
 recipientPhone
 
 shippingProvince
-shippingDistrict
 shippingWard
 shippingAddress
 ```
@@ -601,11 +600,11 @@ Các mục 5.4, 11 mô tả yêu cầu kỹ thuật nhưng dự án **chưa ch�
 cụ thể — cần chốt trước khi implement để tránh dùng lẫn lộn nhiều lib
 cho cùng một mục đích:
 
-| Yêu cầu | Trạng thái | Gợi ý |
-|---|---|---|
-| Cart cookie encryption (AES-GCM) | Chưa chọn | `jose`, hoặc Web Crypto API (`crypto.subtle`) thủ công |
-| Password hashing cho Admin | Chưa chọn | `@node-rs/argon2` |
-| TOTP secret + verify | Chưa chọn | `otplib` |
+| Yêu cầu                          | Trạng thái | Gợi ý                                                  |
+| -------------------------------- | ---------- | ------------------------------------------------------ |
+| Cart cookie encryption (AES-GCM) | Chưa chọn  | `jose`, hoặc Web Crypto API (`crypto.subtle`) thủ công |
+| Password hashing cho Admin       | Chưa chọn  | `@node-rs/argon2`                                      |
+| TOTP secret + verify             | Chưa chọn  | `otplib`                                               |
 
 Khi implement, cập nhật bảng này với lựa chọn cuối cùng.
 

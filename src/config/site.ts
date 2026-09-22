@@ -9,6 +9,11 @@ export const CART_TTL_DAYS = 30;
 
 export const ADMIN_SIDEBAR_COLLAPSE_COOKIE = "admin_sidebar_collapsed";
 
+export const SHIPPING = Object.freeze({
+	FLAT_FEE: 30000,
+	FREE_THRESHOLD: 500000, // đơn từ 500k được miễn phí ship
+} as const);
+
 export const PAGINATION = Object.freeze({
 	DEFAULT_PAGE: 1,
 	DEFAULT_PAGE_SIZE: 12,

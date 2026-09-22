@@ -9,21 +9,14 @@ const wardSchema = z.object({
 	name: z.string(),
 });
 
-const districtSchema = z.object({
+const provinceSchema = z.object({
 	code: z.number(),
 	name: z.string(),
 	wards: z.array(wardSchema).optional(),
 });
 
-const provinceSchema = z.object({
-	code: z.number(),
-	name: z.string(),
-	districts: z.array(districtSchema).optional(),
-});
-
-export type Ward = z.infer<typeof wardSchema>;
-export type District = z.infer<typeof districtSchema>;
 export type Province = z.infer<typeof provinceSchema>;
+export type Ward = z.infer<typeof wardSchema>;
 
 async function fetchProvinces(): Promise<Province[]> {
 	try {
@@ -37,26 +30,12 @@ async function fetchProvinces(): Promise<Province[]> {
 	}
 }
 
-async function fetchDistrictsByProvince(provinceCode: number): Promise<District[]> {
+async function fetchWardsByProvince(provinceCode: number): Promise<Ward[]> {
 	try {
-		const { data } = await externalApi.get(`${process.env.PROVINCES_BASE_URL}/p/${provinceCode}`, {
-			params: { depth: 2 },
+		const { data } = await externalApi.get(`${process.env.PROVINCES_BASE_URL}/w/`, {
+			params: { province: provinceCode },
 		});
-		return provinceSchema.parse(data).districts ?? [];
-	} catch (error) {
-		if (isAxiosError(error)) {
-			throw new Error(`Không thể tải danh sách quận/huyện: ${error.message}`);
-		}
-		throw error;
-	}
-}
-
-async function fetchWardsByDistrict(districtCode: number): Promise<Ward[]> {
-	try {
-		const { data } = await externalApi.get(`${process.env.PROVINCES_BASE_URL}/d/${districtCode}`, {
-			params: { depth: 2 },
-		});
-		return districtSchema.parse(data).wards ?? [];
+		return z.array(wardSchema).parse(data ?? []);
 	} catch (error) {
 		if (isAxiosError(error)) {
 			throw new Error(`Không thể tải danh sách phường/xã: ${error.message}`);
@@ -71,14 +50,8 @@ export const getProvinces = unstable_cache(fetchProvinces, ["provinces-list"], {
 	tags: ["provinces"],
 });
 
-/** Lấy quận/huyện theo tỉnh — cache riêng theo từng provinceCode */
-export const getDistrictsByProvince = unstable_cache(fetchDistrictsByProvince, ["districts-by-province"], {
-	revalidate: CACHE_REVALIDATE_SECONDS,
-	tags: ["provinces"],
-});
-
-/** Lấy phường/xã theo quận/huyện — cache riêng theo từng districtCode */
-export const getWardsByDistrict = unstable_cache(fetchWardsByDistrict, ["wards-by-district"], {
+/** Lấy phường/xã theo quận/huyện — cache riêng theo từng provinceCode */
+export const getWardsByProvince = unstable_cache(fetchWardsByProvince, ["wards-by-province"], {
 	revalidate: CACHE_REVALIDATE_SECONDS,
 	tags: ["provinces"],
 });

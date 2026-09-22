@@ -22,7 +22,7 @@ export const productVariantSchema = z.object({
 	price: z.coerce.number().positive("Giá phải lớn hơn 0").max(999_999_999_999_9),
 	oldPrice: z.coerce.number().positive().optional().nullable(),
 	stockQuantity: z.coerce.number().int("Số lượng phải là số nguyên").min(0, "Số lượng không được âm").default(0),
-	status: EntityStatusEnum.default(EntityStatus.Active),
+	status: EntityStatusEnum.default("Active"),
 	optionValueIds: z.array(z.coerce.number()).default([]),
 });
 
@@ -31,7 +31,7 @@ export const createProductSchema = z.object({
 	name: z.string().min(1, "Tên sản phẩm không được để trống").max(255),
 	slug: z.string().min(1).max(255).optional(),
 	description: z.string().optional(),
-	status: EntityStatusEnum.default(EntityStatus.Active),
+	status: EntityStatusEnum.default("Active"),
 	options: z.array(productOptionSchema).default([]),
 	variants: z.array(productVariantSchema).min(1, "Cần ít nhất một biến thể"),
 });
@@ -121,3 +121,15 @@ export type CreateVariantInput = z.infer<typeof createVariantSchema>;
 export type UpdateVariantInput = z.infer<typeof updateVariantSchema>;
 export type ProductImageInput = z.infer<typeof productImageSchema>;
 export type UploadProductImageInput = z.infer<typeof uploadProductImageSchema>;
+
+// ===== Public (customer-facing) =====
+
+export const publicProductQuerySchema = z.object({
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(100).default(12),
+	search: z.string().trim().min(1).optional(),
+	categoryId: z.coerce.number().optional(),
+	sortBy: z.enum(["newest", "priceAsc", "priceDesc"]).default("newest"),
+});
+
+export type PublicProductQuery = z.infer<typeof publicProductQuerySchema>;

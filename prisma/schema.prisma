@@ -312,7 +312,6 @@ model Order {
 
   // ===== Shipping Address Snapshot =====
   shippingProvince String @map("shipping_province") @db.VarChar(100)
-  shippingDistrict String @map("shipping_district") @db.VarChar(100)
   shippingWard     String @map("shipping_ward") @db.VarChar(100)
   shippingAddress  String @map("shipping_address") @db.VarChar(255)
 

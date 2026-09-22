@@ -10,4 +10,8 @@ export const updateCartItemSchema = z.object({
 	quantity: z.coerce.number().int().min(1).max(999),
 });
 
+export const removeCartItemSchema = z.object({
+	cartItemId: z.coerce.number(),
+});
+
 export type AddToCartInput = z.infer<typeof addToCartSchema>;

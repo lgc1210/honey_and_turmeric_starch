@@ -10,6 +10,7 @@ import type {
 	CreateProductInput,
 	CreateVariantInput,
 	ProductQuery,
+	PublicProductQuery,
 	UpdateProductInput,
 	UpdateVariantInput,
 	UploadProductImageInput,
@@ -97,73 +98,65 @@ export async function getAdminProductById(id: bigint) {
 }
 
 export async function createProduct(input: CreateProductInput) {
-	const category = await prisma.category.findUnique({
-		where: { id: BigInt(input.categoryId) },
-	});
+	const category = await prisma.category.findUnique({ where: { id: BigInt(input.categoryId) } });
 	if (!category) throw new Error("Danh mục không tồn tại");
 
-	const product = await prisma.$transaction(
-		async (tx) => {
-			const created = await tx.product.create({
-				data: {
-					categoryId: BigInt(input.categoryId),
-					name: input.name,
-					// slug: await uniqueProductSlug(input.slug || input.name),
-					slug: input.slug || input.name,
-					description: input.description,
-					status: input.status,
-				},
-			});
+	const product = await prisma.$transaction(async (tx) => {
+		const created = await tx.product.create({
+			data: {
+				categoryId: BigInt(input.categoryId),
+				name: input.name,
+				slug: await uniqueProductSlug(input.slug || input.name),
+				description: input.description,
+				status: input.status,
+			},
+		});
 
-			// map "tên option + tên value" -> id, để gán vào variant.optionValueIds theo index
-			const optionValueIdByKey = new Map<string, bigint>();
+		// map "tên option + tên value" -> id, để gán vào variant.optionValueIds theo index
+		const optionValueIdByKey = new Map<string, bigint>();
 
-			for (const option of input.options ?? []) {
-				const createdOption = await tx.productOption.create({ data: { productId: created.id, name: option.name } });
+		for (const option of input.options ?? []) {
+			const createdOption = await tx.productOption.create({ data: { productId: created.id, name: option.name } });
 
-				for (const optionValue of option.values) {
-					const createdValue = await tx.productOptionValue.create({
-						data: {
-							optionId: createdOption.id,
-							value: optionValue.value,
-							normalizedValue: normalizeOptionValue(optionValue.value),
-						},
-					});
-					optionValueIdByKey.set(`${option.name}:${optionValue.value}`, createdValue.id);
-				}
-			}
-
-			for (const variant of input.variants) {
-				// optionValueIds gửi từ client ở bước tạo mới là index cục bộ (0, 1, 2...) trỏ tới
-				// option value vừa tạo ở trên theo thứ tự khai báo — quy ước này được xử lý ở component.
-				const optionValueIds = variant.optionValueIds
-					.map((index) => [...optionValueIdByKey.values()][index])
-					.filter((id): id is bigint => id !== undefined);
-
-				if (optionValueIds.length) await assertNoDuplicateCombination(tx, created.id, optionValueIds);
-
-				await tx.productVariant.create({
+			for (const optionValue of option.values) {
+				const createdValue = await tx.productOptionValue.create({
 					data: {
-						productId: created.id,
-						sku: variant.sku,
-						name: variant.name,
-						price: variant.price,
-						oldPrice: variant.oldPrice,
-						stockQuantity: variant.stockQuantity,
-						status: variant.status,
-						optionValues: optionValueIds.length
-							? { create: optionValueIds.map((optionValueId) => ({ optionValueId })) }
-							: undefined,
+						optionId: createdOption.id,
+						value: optionValue.value,
+						normalizedValue: normalizeOptionValue(optionValue.value),
 					},
 				});
+				optionValueIdByKey.set(`${option.name}:${optionValue.value}`, createdValue.id);
 			}
+		}
 
-			return created;
-		},
-		{
-			timeout: 50000,
-		},
-	);
+		for (const variant of input.variants) {
+			// optionValueIds gửi từ client ở bước tạo mới là index cục bộ (0, 1, 2...) trỏ tới
+			// option value vừa tạo ở trên theo thứ tự khai báo — quy ước này được xử lý ở component.
+			const optionValueIds = variant.optionValueIds
+				.map((index) => [...optionValueIdByKey.values()][index])
+				.filter((id): id is bigint => id !== undefined);
+
+			if (optionValueIds.length) await assertNoDuplicateCombination(tx, created.id, optionValueIds);
+
+			await tx.productVariant.create({
+				data: {
+					productId: created.id,
+					sku: variant.sku,
+					name: variant.name,
+					price: variant.price,
+					oldPrice: variant.oldPrice,
+					stockQuantity: variant.stockQuantity,
+					status: variant.status,
+					optionValues: optionValueIds.length
+						? { create: optionValueIds.map((optionValueId) => ({ optionValueId })) }
+						: undefined,
+				},
+			});
+		}
+
+		return created;
+	});
 
 	return serialize(product);
 }
@@ -389,4 +382,125 @@ export async function deleteImage(id: bigint) {
 	const image = await prisma.productImage.findUniqueOrThrow({ where: { id } });
 	await prisma.productImage.delete({ where: { id } });
 	await deleteImageFile(image.url);
+}
+
+// ===================================================================
+// Public (customer-facing) — chỉ trả về sản phẩm/biến thể đang Active
+// ===================================================================
+
+const productCardInclude = {
+	category: { select: { id: true, name: true, slug: true } },
+	variants: {
+		where: { status: "Active" as const },
+		orderBy: { price: "asc" as const },
+		select: {
+			id: true,
+			price: true,
+			oldPrice: true,
+			stockQuantity: true,
+			images: { orderBy: [{ isPrimary: "desc" as const }, { sortOrder: "asc" as const }], take: 1 },
+		},
+	},
+} satisfies Prisma.ProductInclude;
+
+function withMinPrice<T extends { variants: { price: Prisma.Decimal }[] }>(product: T) {
+	const minPrice = product.variants.length ? Math.min(...product.variants.map((v) => Number(v.price))) : 0;
+	return { ...product, minPrice };
+}
+
+export async function getPublishedProducts(query: PublicProductQuery) {
+	const pageSize = query.pageSize || PAGINATION.DEFAULT_PAGE_SIZE;
+
+	const where: Prisma.ProductWhereInput = {
+		status: "Active",
+		variants: { some: { status: "Active" } }, // chỉ hiện sản phẩm còn ít nhất 1 biến thể đang bán
+		...(query.search ? { name: { contains: query.search, mode: "insensitive" } } : {}),
+		...(query.categoryId ? { categoryId: BigInt(query.categoryId) } : {}),
+	};
+
+	// "newest" phân trang được ngay ở DB. priceAsc/priceDesc cần sắp theo giá thấp nhất
+	// của biến thể (không phải cột trực tiếp trên Product) nên phải lấy hết rồi sort ở
+	// JS trước khi cắt trang — chấp nhận được với quy mô catalog vừa/nhỏ của cửa hàng.
+	if (query.sortBy === "newest") {
+		const [items, total] = await Promise.all([
+			prisma.product.findMany({
+				where,
+				orderBy: { createdAt: "desc" },
+				skip: (query.page - 1) * pageSize,
+				take: pageSize,
+				include: productCardInclude,
+			}),
+			prisma.product.count({ where }),
+		]);
+
+		return {
+			items: serialize(items.map(withMinPrice)),
+			total,
+			page: query.page,
+			pageSize,
+			totalPages: Math.max(1, Math.ceil(total / pageSize)),
+		};
+	}
+
+	const all = await prisma.product.findMany({ where, include: productCardInclude });
+	const withPrices = all.map(withMinPrice);
+	withPrices.sort((a, b) => (query.sortBy === "priceAsc" ? a.minPrice - b.minPrice : b.minPrice - a.minPrice));
+
+	const total = withPrices.length;
+	const start = (query.page - 1) * pageSize;
+	const items = withPrices.slice(start, start + pageSize);
+
+	return {
+		items: serialize(items),
+		total,
+		page: query.page,
+		pageSize,
+		totalPages: Math.max(1, Math.ceil(total / pageSize)),
+	};
+}
+
+export async function getFeaturedProducts(limit = 8) {
+	const products = await prisma.product.findMany({
+		where: { status: "Active", variants: { some: { status: "Active" } } },
+		orderBy: { createdAt: "desc" },
+		take: limit,
+		include: productCardInclude,
+	});
+
+	return serialize(products.map(withMinPrice));
+}
+
+export async function getProductBySlug(slug: string) {
+	const product = await prisma.product.findFirst({
+		where: { slug, status: "Active" },
+		include: {
+			category: { select: { id: true, name: true, slug: true } },
+			options: { include: { values: true } },
+			variants: {
+				where: { status: "Active" },
+				orderBy: { price: "asc" },
+				include: {
+					optionValues: { include: { optionValue: true } },
+					images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }] },
+				},
+			},
+		},
+	});
+
+	return product ? serialize(product) : null;
+}
+
+export async function getRelatedProducts(categoryId: bigint, excludeProductId: bigint, limit = 4) {
+	const products = await prisma.product.findMany({
+		where: {
+			status: "Active",
+			categoryId,
+			id: { not: excludeProductId },
+			variants: { some: { status: "Active" } },
+		},
+		take: limit,
+		include: productCardInclude,
+	});
+
+	return serialize(products.map(withMinPrice));
 }

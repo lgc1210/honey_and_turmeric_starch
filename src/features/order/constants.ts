@@ -1,4 +1,3 @@
-// src/features/order/constants.ts
 import { OrderStatus } from "@/generated/prisma/client";
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
@@ -17,8 +16,25 @@ export const ORDER_STATUS_VARIANT: Record<OrderStatus, "default" | "secondary" |
 	Cancelled: "destructive",
 };
 
-/** Dùng cho dropdown filter, select trong form */
-export const ORDER_STATUS_OPTIONS = Object.values(OrderStatus).map((value) => ({
-	value,
-	label: ORDER_STATUS_LABEL[value],
-}));
+export const ORDER_STATUS_OPTIONS = [
+	{
+		value: "Pending",
+		label: "Chờ xác nhận",
+	},
+	{
+		value: "Confirmed",
+		label: "Đã xác nhận",
+	},
+	{
+		value: "Processing",
+		label: "Đang xử lý",
+	},
+	{
+		value: "Completed",
+		label: "Hoàn thành",
+	},
+	{
+		value: "Cancelled",
+		label: "Đã hủy",
+	},
+] as const;

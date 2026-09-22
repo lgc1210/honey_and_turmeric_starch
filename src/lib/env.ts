@@ -15,6 +15,15 @@ const envSchema = z.object({
 		.string()
 		.regex(/^[0-9a-f]{64}$/i)
 		.optional(),
+
+	// API tỉnh/thành Việt Nam (dùng cho chọn địa chỉ giao hàng lúc checkout).
+	PROVINCES_BASE_URL: z.url().default("https://provinces.open-api.vn/api"),
+
+	// Mã hoá AES-GCM cho cookie cart_id (mục 5.4/11 AGENTS.md) — chuỗi hex 64 ký tự (32 byte).
+	CART_COOKIE_ENCRYPTION_KEY: z
+		.string()
+		.regex(/^[0-9a-f]{64}$/i)
+		.optional(),
 });
 
 export const env = envSchema.parse(process.env);

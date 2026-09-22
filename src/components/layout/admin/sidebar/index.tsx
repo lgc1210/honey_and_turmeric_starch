@@ -119,12 +119,12 @@ export default function AdminSidebar({ adminEmail, initialCollapsed }: AdminSide
 					<Button
 						type='submit'
 						variant='outline'
-						size={collapsed ? "icon-sm" : "lg"}
+						size={collapsed ? "icon-lg" : "lg"}
 						className={collapsed ? "" : "flex w-full items-center gap-2"}
 						title={collapsed ? "Đăng xuất" : undefined}
 						aria-label={collapsed ? "Đăng xuất" : undefined}>
 						{!collapsed && <span>Đăng xuất</span>}
-						<LogOut className='size-3' />
+						<LogOut />
 					</Button>
 				</form>
 			</div>

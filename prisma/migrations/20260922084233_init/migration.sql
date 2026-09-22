@@ -154,7 +154,6 @@ CREATE TABLE "orders" (
     "recipient_email" VARCHAR(150) NOT NULL,
     "recipient_phone" VARCHAR(30) NOT NULL,
     "shipping_province" VARCHAR(100) NOT NULL,
-    "shipping_district" VARCHAR(100) NOT NULL,
     "shipping_ward" VARCHAR(100) NOT NULL,
     "shipping_address" VARCHAR(255) NOT NULL,
     "subtotal" DECIMAL(15,2) NOT NULL,

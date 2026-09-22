@@ -59,7 +59,7 @@ export function CouponFilters() {
 				<option value={EntityStatus.InActive}>Ngừng</option>
 			</select>
 
-			<Button type='submit' variant='outline' size='lg'>
+			<Button type='submit' size='lg'>
 				Tìm
 			</Button>
 			{hasActiveFilters && (

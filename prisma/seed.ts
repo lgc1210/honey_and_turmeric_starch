@@ -104,14 +104,6 @@ async function main() {
 			expiresAt: new Date("2030-01-01"),
 		},
 	});
-	const seededOrder = await prisma.order.findUnique({ where: { orderNumber: "HT-SEED-001" } });
-	if (seededOrder)
-		await prisma.couponUsage.upsert({
-			where: { couponId_orderId: { couponId: coupon.id, orderId: seededOrder.id } },
-			update: {},
-			create: { couponId: coupon.id, orderId: seededOrder.id, discountAmount: 84000 },
-		});
-	console.log(`Seeded admin ${admin.email}, categories ${honey.name}/${turmeric.name}`);
 }
 
 main().finally(() => prisma.$disconnect());

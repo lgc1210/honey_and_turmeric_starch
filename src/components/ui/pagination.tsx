@@ -22,7 +22,7 @@ function buildPageList(page: number, totalPages: number): (number | "ellipsis")[
 
 export function Pagination({ page, totalPages, basePath }: { page: number; totalPages: number; basePath: string }) {
 	const searchParams = useSearchParams();
-	// if (totalPages <= 1) return null;
+	if (totalPages <= 1) return null;
 
 	function hrefFor(target: number) {
 		const params = new URLSearchParams(searchParams.toString());
