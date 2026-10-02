@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { getActiveCategoryOptions } from "../api/service";
+import paths from "@/config/path";
 
 export async function CategoryShowcase() {
 	const categories = await getActiveCategoryOptions();
@@ -13,7 +14,7 @@ export async function CategoryShowcase() {
 			{topLevel.map((category, index) => (
 				<Link
 					key={category.id}
-					href={`/products?categoryId=${category.id}`}
+					href={`${paths.client.products}?categoryId=${category.id}`}
 					className='group flex animate-in fade-in slide-in-from-bottom-4 fill-mode-both flex-col items-center gap-2 border border-border bg-card p-4 text-center transition-colors duration-200 hover:border-primary/50'
 					style={{ animationDelay: `${index * 60}ms` }}>
 					<span className='flex size-12 items-center justify-center bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-110'>

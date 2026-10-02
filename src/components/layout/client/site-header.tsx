@@ -26,6 +26,7 @@ export async function SiteHeader() {
 
 				<Link
 					href={paths.client.cart}
+					title='Giỏ hàng'
 					className='relative flex items-center gap-1 text-foreground transition-transform duration-150 hover:scale-110'
 					aria-label='Giỏ hàng'>
 					<ShoppingCart className='size-5' />

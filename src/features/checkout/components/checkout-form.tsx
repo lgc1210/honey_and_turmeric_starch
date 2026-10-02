@@ -81,21 +81,26 @@ export function CheckoutForm() {
 			<section className='grid gap-4 sm:grid-cols-2'>
 				<div className='space-y-1'>
 					<Label htmlFor='recipientName'>Họ và tên</Label>
-					<Input id='recipientName' {...form.register("recipientName")} />
+					<Input id='recipientName' {...form.register("recipientName")} placeholder='Nguyễn Văn A' />
 					{form.formState.errors.recipientName && (
 						<p className='text-xs text-destructive'>{form.formState.errors.recipientName.message}</p>
 					)}
 				</div>
 				<div className='space-y-1'>
 					<Label htmlFor='recipientPhone'>Số điện thoại</Label>
-					<Input id='recipientPhone' {...form.register("recipientPhone")} />
+					<Input id='recipientPhone' {...form.register("recipientPhone")} placeholder='0123456789' />
 					{form.formState.errors.recipientPhone && (
 						<p className='text-xs text-destructive'>{form.formState.errors.recipientPhone.message}</p>
 					)}
 				</div>
 				<div className='space-y-1 sm:col-span-2'>
 					<Label htmlFor='recipientEmail'>Email</Label>
-					<Input id='recipientEmail' type='email' {...form.register("recipientEmail")} />
+					<Input
+						id='recipientEmail'
+						type='email'
+						{...form.register("recipientEmail")}
+						placeholder='nguyenvana@example.com'
+					/>
 					{form.formState.errors.recipientEmail && (
 						<p className='text-xs text-destructive'>{form.formState.errors.recipientEmail.message}</p>
 					)}
@@ -157,11 +162,11 @@ export function CheckoutForm() {
 			<div className='grid gap-4 sm:grid-cols-2'>
 				<div className='space-y-1'>
 					<Label htmlFor='couponCode'>Mã giảm giá (nếu có)</Label>
-					<Input id='couponCode' {...form.register("couponCode")} />
+					<Input id='couponCode' placeholder='Nhập mã giảm giá...' {...form.register("couponCode")} />
 				</div>
 				<div className='space-y-1'>
 					<Label htmlFor='note'>Ghi chú</Label>
-					<Textarea id='note' rows={1} {...form.register("note")} />
+					<Textarea id='note' rows={1} placeholder='Ghi chú về đơn hàng...' {...form.register("note")} />
 				</div>
 			</div>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import paths from "@/config/path";
 
 export type ProductCardData = {
 	id: string;
@@ -21,7 +22,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
 	return (
 		<Link
-			href={`/products/${product.slug}`}
+			href={`${paths.client.products}/${product.slug}`}
 			className='group block border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/50'>
 			<div className='relative aspect-square overflow-hidden bg-muted'>
 				{image ? (

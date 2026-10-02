@@ -25,7 +25,7 @@ export function QuantityInput({
 			<Button
 				type='button'
 				variant='ghost'
-				size='icon-sm'
+				size='icon-lg'
 				disabled={disabled || value <= min}
 				onClick={() => onChange(clamp(value - 1))}
 				aria-label='Giảm số lượng'>
@@ -33,6 +33,7 @@ export function QuantityInput({
 			</Button>
 			<Input
 				type='number'
+				name='quantity'
 				min={min}
 				max={max}
 				value={value}
@@ -43,7 +44,7 @@ export function QuantityInput({
 			<Button
 				type='button'
 				variant='ghost'
-				size='icon-sm'
+				size='icon-lg'
 				disabled={disabled || value >= max}
 				onClick={() => onChange(clamp(value + 1))}
 				aria-label='Tăng số lượng'>

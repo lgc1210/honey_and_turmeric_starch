@@ -13,7 +13,7 @@ export default async function CartPage() {
 	if (cart.items.length === 0) {
 		return (
 			<div className='py-16 text-center'>
-				<h1 className='font-serif text-2xl font-semibold text-foreground'>Giỏ hàng trống</h1>
+				<h1 className='font-sans text-2xl font-bold text-foreground'>Giỏ hàng trống</h1>
 				<p className='mt-2 text-muted-foreground'>Hãy chọn vài sản phẩm yêu thích để tiếp tục nhé.</p>
 				<Button className='mt-6 cursor-pointer'>
 					<Link href={paths.client.products}>Tiếp tục mua sắm</Link>
@@ -26,7 +26,7 @@ export default async function CartPage() {
 
 	return (
 		<div>
-			<h1 className='mb-6 font-serif text-2xl font-semibold text-foreground'>Giỏ hàng</h1>
+			<h1 className='mb-6 font-sans text-2xl font-bold text-foreground'>Giỏ hàng</h1>
 
 			<div className='grid gap-8 lg:grid-cols-3'>
 				<div className='border border-border p-4 lg:col-span-2'>
@@ -36,7 +36,7 @@ export default async function CartPage() {
 				</div>
 
 				<div className='h-fit space-y-4 border border-border p-4'>
-					<h2 className='font-semibold text-foreground'>Tóm tắt đơn hàng</h2>
+					<h2 className='font-bold text-foreground'>Tóm tắt đơn hàng</h2>
 					<div className='flex justify-between text-sm'>
 						<span className='text-muted-foreground'>Tạm tính ({cart.itemCount} sản phẩm)</span>
 						<span className='text-foreground'>{formatCurrency(cart.subtotal)}</span>

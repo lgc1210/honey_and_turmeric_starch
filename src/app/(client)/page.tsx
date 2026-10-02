@@ -26,7 +26,7 @@ export default function HomePage() {
 					<span className='inline-block bg-primary/10 px-3 py-1 text-xs font-medium tracking-wide text-primary uppercase'>
 						Thủ công · Tự nhiên · Nguyên chất
 					</span>
-					<h1 className='mt-4 font-serif text-3xl font-semibold text-foreground sm:text-4xl lg:text-5xl'>
+					<h1 className='mt-4 font-sans text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl'>
 						Mật ong &amp; tinh bột nghệ nguyên chất
 					</h1>
 					<p className='mx-auto mt-4 max-w-xl text-muted-foreground'>
@@ -34,11 +34,11 @@ export default function HomePage() {
 						đình.
 					</p>
 					<div className='mt-8 flex flex-wrap items-center justify-center gap-3'>
-						<Button size='lg' render={<Link href={paths.client.products} />}>
-							Khám phá cửa hàng
+						<Button size='lg' className='cursor-pointer'>
+							<Link href={paths.client.products}>Khám phá cửa hàng</Link>
 						</Button>
-						<Button size='lg' variant='outline' render={<Link href='#gioi-thieu' />}>
-							Tìm hiểu thêm
+						<Button size='lg' variant='outline' className='cursor-pointer'>
+							<Link href='#gioi-thieu'>Tìm hiểu thêm</Link>
 						</Button>
 					</div>
 				</div>
@@ -59,7 +59,7 @@ export default function HomePage() {
 
 			<section>
 				<div className='mb-6 text-center'>
-					<h2 className='font-serif text-2xl font-semibold text-foreground'>Danh mục sản phẩm</h2>
+					<h2 className='font-sans text-2xl font-bold text-foreground'>Danh mục sản phẩm</h2>
 					<p className='mt-1 text-sm text-muted-foreground'>Chọn đúng loại bạn đang tìm kiếm</p>
 				</div>
 				<CategoryShowcase />
@@ -68,7 +68,7 @@ export default function HomePage() {
 			<section>
 				<div className='mb-6 flex items-center justify-between'>
 					<div>
-						<h2 className='font-serif text-2xl font-semibold text-foreground'>Sản phẩm nổi bật</h2>
+						<h2 className='font-sans text-2xl font-bold text-foreground'>Sản phẩm nổi bật</h2>
 						<p className='mt-1 text-sm text-muted-foreground'>Được yêu thích nhất trong thời gian gần đây</p>
 					</div>
 					<Link href={paths.client.products} className='text-sm text-primary underline-offset-4 hover:underline'>
@@ -84,14 +84,14 @@ export default function HomePage() {
 			<section id='gioi-thieu' className='grid items-center gap-8 border border-border bg-card p-8 lg:grid-cols-2'>
 				<div className='animate-in fade-in slide-in-from-left-4 duration-700'>
 					<span className='text-xs font-medium tracking-wide text-primary uppercase'>Câu chuyện của chúng tôi</span>
-					<h2 className='mt-2 font-serif text-2xl font-semibold text-foreground'>Từ vườn nhà đến tay bạn</h2>
+					<h2 className='mt-2 font-sans text-2xl font-bold text-foreground'>Từ vườn nhà đến tay bạn</h2>
 					<p className='mt-4 text-muted-foreground'>
 						Kim Bạc Store bắt đầu từ những mẻ mật ong rừng và tinh bột nghệ tự làm cho gia đình — vì tin rằng những gì
 						tốt nhất nên được chia sẻ. Mỗi sản phẩm đều được chúng tôi trực tiếp kiểm tra chất lượng trước khi đến tay
 						khách hàng, không qua trung gian, không pha trộn.
 					</p>
-					<Button className='mt-6' variant='outline' render={<Link href={paths.client.products} />}>
-						Xem sản phẩm của chúng tôi
+					<Button className='mt-6 cursor-pointer' variant='outline'>
+						<Link href={paths.client.products}>Xem sản phẩm của chúng tôi</Link>
 					</Button>
 				</div>
 				<div

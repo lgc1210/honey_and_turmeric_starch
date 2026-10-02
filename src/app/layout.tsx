@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 
 // Thêm vào đầu file entry point
@@ -13,10 +12,12 @@ BigInt.prototype.toJSON = function () {
 	return this.toString();
 };
 
-const beVietnamPro = Be_Vietnam_Pro({
-	subsets: ["vietnamese"], // Bắt buộc phải có vietnamese để không lỗi dấu
-	weight: ["400", "500", "600", "700"], // Chọn các độ đậm/nhạt bạn sẽ dùng
-	variable: "--font-be-vietnam", // Tạo một biến CSS (nếu dùng Tailwind)
+import { Montserrat } from "next/font/google";
+
+const montserrat = Montserrat({
+	subsets: ["vietnamese", "latin"],
+	weight: ["400", "500", "600", "700"],
+	variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
 	return (
-		<html lang='vi' className={`${beVietnamPro.className} h-full`}>
+		<html lang='vi' className={`${montserrat.className} h-full`}>
 			<body className='min-h-full flex flex-col' suppressHydrationWarning>
 				{children}
 			</body>
