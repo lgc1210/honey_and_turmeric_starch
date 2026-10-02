@@ -26,8 +26,13 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 				<p className='text-sm text-muted-foreground'>Không tìm thấy sản phẩm nào.</p>
 			) : (
 				<div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
-					{result.items?.map((product) => (
-						<ProductCard key={product.id} product={product} />
+					{result.items?.map((product, index) => (
+						<div
+							key={product.id}
+							className='animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500'
+							style={{ animationDelay: `${Math.min(index, 12) * 50}ms` }}>
+							<ProductCard product={product} />
+						</div>
 					))}
 				</div>
 			)}

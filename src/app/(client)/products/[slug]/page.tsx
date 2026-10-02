@@ -26,9 +26,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 			</nav>
 
 			<div className='grid gap-8 lg:grid-cols-2'>
-				<VariantPicker options={product.options} variants={product.variants} />
+				<div className='animate-in fade-in slide-in-from-left-4 duration-500'>
+					<VariantPicker options={product.options} variants={product.variants} />
+				</div>
 
-				<div>
+				<div className='animate-in fade-in slide-in-from-right-4 duration-500'>
 					<p className='text-sm text-muted-foreground'>{product.category.name}</p>
 					<h1 className='mt-1 font-serif text-2xl font-semibold text-foreground'>{product.name}</h1>
 					{product.description && (
@@ -41,8 +43,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 				<section>
 					<h2 className='mb-6 font-serif text-2xl font-semibold text-foreground'>Sản phẩm liên quan</h2>
 					<div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
-						{relatedProducts.map((related) => (
-							<ProductCard key={related.id} product={related} />
+						{relatedProducts.map((related, index) => (
+							<div
+								key={related.id}
+								className='animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500'
+								style={{ animationDelay: `${index * 60}ms` }}>
+								<ProductCard product={related} />
+							</div>
 						))}
 					</div>
 				</section>

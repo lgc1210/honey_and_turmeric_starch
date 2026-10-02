@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export type ProductCardData = {
 	id: string;
@@ -13,21 +14,32 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 	const primaryVariant = product.variants[0];
 	const image = primaryVariant?.images[0]?.url;
 	const oldPrice = primaryVariant?.oldPrice;
+	const discountPercent =
+		oldPrice && Number(oldPrice) > product.minPrice
+			? Math.round(((Number(oldPrice) - product.minPrice) / Number(oldPrice)) * 100)
+			: null;
 
 	return (
-		<Link href={`/products/${product.slug}`} className='group block border border-border bg-card'>
-			<div className='aspect-square overflow-hidden bg-muted'>
+		<Link
+			href={`/products/${product.slug}`}
+			className='group block border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/50'>
+			<div className='relative aspect-square overflow-hidden bg-muted'>
 				{image ? (
 					// eslint-disable-next-line @next/next/no-img-element -- ảnh do admin upload lên server nội bộ
 					<img
 						src={image}
 						alt={product.name}
-						className='h-full w-full object-cover transition-transform duration-200 group-hover:scale-105'
+						className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-110'
 					/>
 				) : (
 					<div className='flex h-full w-full items-center justify-center text-xs text-muted-foreground'>
 						Chưa có ảnh
 					</div>
+				)}
+				{discountPercent && (
+					<Badge variant='accent' className='absolute top-2 left-2'>
+						-{discountPercent}%
+					</Badge>
 				)}
 			</div>
 			<div className='p-3'>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { QuantityInput } from "@/components/ui/quantity-input";
@@ -43,6 +44,7 @@ export function VariantPicker({ options, variants }: { options: ProductOption[];
 	const [quantity, setQuantity] = useState(1);
 	const [activeImage, setActiveImage] = useState(0);
 	const [message, setMessage] = useState("");
+	const [added, setAdded] = useState(false);
 	const [pending, setPending] = useState(false);
 
 	const selectedValueIds = Object.values(selected);
@@ -59,19 +61,21 @@ export function VariantPicker({ options, variants }: { options: ProductOption[];
 		setSelected((prev) => ({ ...prev, [optionId]: valueId }));
 		setActiveImage(0);
 		setMessage("");
+		setAdded(false);
 	}
 
 	async function onAddToCart() {
 		if (!activeVariant) return;
 		setPending(true);
 		setMessage("");
+		setAdded(false);
 		const result = await addToCartAction({ productVariantId: activeVariant.id, quantity });
 		setPending(false);
 		if (!result.success) {
 			setMessage(result.error);
 			return;
 		}
-		setMessage("Đã thêm vào giỏ hàng.");
+		setAdded(true);
 		router.refresh();
 	}
 
@@ -154,12 +158,24 @@ export function VariantPicker({ options, variants }: { options: ProductOption[];
 					max={activeVariant.stockQuantity}
 					disabled={outOfStock}
 				/>
-				<Button type='button' onClick={onAddToCart} disabled={pending || outOfStock}>
-					{pending ? "Đang thêm..." : "Thêm vào giỏ"}
+				<Button
+					type='button'
+					onClick={onAddToCart}
+					disabled={pending || outOfStock}
+					className={added ? "bg-primary" : undefined}>
+					{pending ? (
+						"Đang thêm..."
+					) : added ? (
+						<span className='flex animate-in fade-in zoom-in-95 items-center gap-2 duration-300'>
+							<Check className='size-4' /> Đã thêm
+						</span>
+					) : (
+						"Thêm vào giỏ"
+					)}
 				</Button>
 			</div>
 
-			{message && <p className='text-sm text-muted-foreground'>{message}</p>}
+			{message && <p className='animate-in fade-in text-sm text-destructive duration-300'>{message}</p>}
 		</div>
 	);
 }

@@ -26,11 +26,11 @@ export async function SiteHeader() {
 
 				<Link
 					href={paths.client.cart}
-					className='relative flex items-center gap-1 text-foreground'
+					className='relative flex items-center gap-1 text-foreground transition-transform duration-150 hover:scale-110'
 					aria-label='Giỏ hàng'>
 					<ShoppingCart className='size-5' />
 					{itemCount > 0 && (
-						<span className='absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center bg-primary px-1 text-[10px] font-medium text-primary-foreground rounded-full'>
+						<span className='absolute -top-2 -right-2 flex h-4 min-w-4 animate-in zoom-in-50 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground duration-300'>
 							{itemCount > 99 ? "99+" : itemCount}
 						</span>
 					)}

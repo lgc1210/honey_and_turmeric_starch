@@ -19,10 +19,15 @@ export function NavLinks({ links }: { links: NavLinkItem[] }) {
 					<Link
 						key={link.href}
 						href={link.href}
-						className={`text-sm transition-colors hover:text-foreground ${
+						className={`relative py-1 text-sm transition-colors hover:text-foreground ${
 							isActive ? "text-primary font-medium" : "text-muted-foreground"
 						}`}>
 						{link.label}
+						<span
+							className={`absolute inset-x-0 -bottom-1 h-0.5 bg-primary transition-transform duration-200 ${
+								isActive ? "scale-x-100" : "scale-x-0"
+							}`}
+						/>
 					</Link>
 				);
 			})}
