@@ -5,7 +5,7 @@ const envSchema = z.object({
 
 	NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
-	NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
+	PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
 
 	// Ký session cookie của admin (HMAC). Bắt buộc phải cấu hình ở production.
 	ADMIN_SESSION_SECRET: z.string().min(32).optional(),
@@ -24,6 +24,11 @@ const envSchema = z.object({
 		.string()
 		.regex(/^[0-9a-f]{64}$/i)
 		.optional(),
+
+	PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+	PUBLIC_SUPABASE_URL: z.url(),
+	PUBLIC_SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+	SUPABASE_PRODUCT_IMAGE_BUCKET: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);

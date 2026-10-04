@@ -19,7 +19,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 	const [categories, result] = await Promise.all([getActiveCategoryOptions(), getPublishedProducts(query)]);
 
 	return (
-		<div>
+		<div className='max-w-6xl px-4 py-8 w-full mx-auto'>
 			<h1 className='mb-6 font-sans text-2xl font-bold text-foreground'>Cửa hàng</h1>
 			<ShopFilters categories={categories} />
 			{result.items?.length === 0 ? (

@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import paths from "@/config/path";
 import { readCartIdCookie } from "@/lib/cart-cookie";
@@ -61,9 +60,9 @@ export default async function CheckoutSuccessPage({ searchParams }: { searchPara
 				</p>
 			</div>
 
-			<Button size='lg' className='cursor-pointer'>
-				<Link href={paths.client.products}>Tiếp tục mua sắm</Link>
-			</Button>
+			<ButtonLink size='lg' href={paths.client.products} className='w-full'>
+				Tiếp tục mua sắm
+			</ButtonLink>
 		</div>
 	);
 }

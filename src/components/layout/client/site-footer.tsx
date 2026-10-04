@@ -1,6 +1,6 @@
 export function SiteFooter() {
 	return (
-		<footer className='border-t border-border bg-card'>
+		<footer className='border-t border-border bg-card w-full'>
 			<div className='mx-auto max-w-6xl px-4 py-8 text-sm text-muted-foreground'>
 				<p className='font-sans text-base font-bold text-foreground'>Kim Bạc Store</p>
 				<p className='mt-1'>Mật ong &amp; tinh bột nghệ nguyên chất.</p>

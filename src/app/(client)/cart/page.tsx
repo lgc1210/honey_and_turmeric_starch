@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { SHIPPING } from "@/config/site";
 import paths from "@/config/path";
@@ -15,9 +14,9 @@ export default async function CartPage() {
 			<div className='py-16 text-center'>
 				<h1 className='font-sans text-2xl font-bold text-foreground'>Giỏ hàng trống</h1>
 				<p className='mt-2 text-muted-foreground'>Hãy chọn vài sản phẩm yêu thích để tiếp tục nhé.</p>
-				<Button className='mt-6 cursor-pointer'>
-					<Link href={paths.client.products}>Tiếp tục mua sắm</Link>
-				</Button>
+				<ButtonLink size='lg' href={paths.client.products} className='mt-6'>
+					Tiếp tục mua sắm
+				</ButtonLink>
 			</div>
 		);
 	}
@@ -25,7 +24,7 @@ export default async function CartPage() {
 	const qualifiesForFreeShipping = cart.subtotal >= SHIPPING.FREE_THRESHOLD;
 
 	return (
-		<div>
+		<div className='max-w-6xl px-4 py-8 w-full mx-auto'>
 			<h1 className='mb-6 font-sans text-2xl font-bold text-foreground'>Giỏ hàng</h1>
 
 			<div className='grid gap-8 lg:grid-cols-3'>
@@ -46,9 +45,9 @@ export default async function CartPage() {
 							? "Đơn hàng của bạn được miễn phí vận chuyển."
 							: `Miễn phí vận chuyển cho đơn từ ${formatCurrency(SHIPPING.FREE_THRESHOLD)}. Phí ship mặc định ${formatCurrency(SHIPPING.FLAT_FEE)}, mã giảm giá (nếu có) áp dụng ở bước thanh toán.`}
 					</p>
-					<Button size='lg' className='w-full cursor-pointer'>
-						<Link href={paths.client.checkout}>Tiến hành thanh toán</Link>
-					</Button>
+					<ButtonLink size='lg' href={paths.client.checkout} className='w-full'>
+						Tiến hành thanh toán
+					</ButtonLink>
 				</div>
 			</div>
 		</div>

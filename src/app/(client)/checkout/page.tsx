@@ -9,7 +9,7 @@ export default async function CheckoutPage() {
 	if (cart.items.length === 0) redirect("/cart");
 
 	return (
-		<div>
+		<div className='max-w-6xl px-4 py-8 w-full mx-auto'>
 			<h1 className='mb-6 font-sans text-2xl font-bold text-foreground'>Thanh toán</h1>
 
 			<div className='grid gap-8 lg:grid-cols-3'>

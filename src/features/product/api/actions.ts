@@ -49,7 +49,7 @@ export async function updateProductAction(input: unknown): Promise<ActionResult<
 	return handleAction(updateProductSchema, input, async (data) => {
 		const product = await updateProduct(data);
 		revalidatePath(paths.admin.products);
-		revalidatePath(`/admin/products/${data.id}`);
+		revalidatePath(`${paths.admin.products}/${data.id}`);
 		return product;
 	});
 }
@@ -79,7 +79,7 @@ export async function createVariantAction(input: unknown): Promise<ActionResult<
 
 	return handleAction(createVariantSchema, input, async (data) => {
 		const variant = await createVariant(data);
-		revalidatePath(`/admin/products/${data.productId}`);
+		revalidatePath(`${paths.admin.products}/${data.productId}`);
 		return variant;
 	});
 }
@@ -89,7 +89,7 @@ export async function updateVariantAction(input: unknown): Promise<ActionResult<
 
 	return handleAction(updateVariantSchema, input, async (data) => {
 		const variant = await updateVariant(data);
-		revalidatePath(`/admin/products/${data.productId}`);
+		revalidatePath(`${paths.admin.products}/${data.productId}`);
 		return variant;
 	});
 }

@@ -1,7 +1,4 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { Prisma } from "@/generated/prisma/client";
+import { EntityStatus, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { slugify, normalizeOptionValue } from "@/lib/utils";
 import { serialize } from "@/lib/serialize";
@@ -15,6 +12,8 @@ import type {
 	UpdateVariantInput,
 	UploadProductImageInput,
 } from "../schema";
+import { deleteImageFile, saveImageFile } from "@/lib/image-handler";
+import { env } from "@/lib/env";
 
 async function uniqueProductSlug(input: string, excludeId?: bigint): Promise<string> {
 	const base = slugify(input) || "san-pham";
@@ -182,7 +181,7 @@ export async function updateProduct(input: UpdateProductInput) {
 	return serialize(product);
 }
 
-export async function updateProductStatus(id: bigint, status: "Active" | "InActive") {
+export async function updateProductStatus(id: bigint, status: EntityStatus) {
 	const product = await prisma.product.update({ where: { id }, data: { status } });
 	return serialize(product);
 }
@@ -246,7 +245,7 @@ export async function updateVariant(input: UpdateVariantInput) {
 	return serialize(variant);
 }
 
-export async function updateVariantStatus(id: bigint, status: "Active" | "InActive") {
+export async function updateVariantStatus(id: bigint, status: EntityStatus) {
 	const variant = await prisma.productVariant.update({ where: { id }, data: { status } });
 	return serialize(variant);
 }
@@ -275,7 +274,7 @@ export async function deleteVariant(id: bigint): Promise<void> {
 		prisma.productVariant.delete({ where: { id } }),
 	]);
 
-	await Promise.all(images.map((image) => deleteImageFile(image.url)));
+	await Promise.all(images.map((image) => deleteImageFile(image.url, env.SUPABASE_PRODUCT_IMAGE_BUCKET)));
 }
 
 /** Xoá toàn bộ sản phẩm (kèm option/variant/ảnh) — chặn nếu bất kỳ biến thể nào đã từng được đặt hàng. */
@@ -310,38 +309,11 @@ export async function deleteProduct(id: bigint): Promise<void> {
 		prisma.product.delete({ where: { id } }),
 	]);
 
-	await Promise.all(images.map((image) => deleteImageFile(image.url)));
-}
-
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "products");
-const PUBLIC_UPLOAD_PATH = "/uploads/products";
-
-/**
- * Lưu file ảnh vào ổ đĩa cục bộ (public/uploads/products). Phù hợp cho deploy
- * dạng server chạy liên tục (VD: VPS, Docker); nếu sau này chuyển sang nền
- * tảng serverless/edge (filesystem không bền), cần thay bằng object storage
- * (S3/R2/Supabase Storage) — không làm trước vì hiện chưa cần (YAGNI).
- */
-async function saveImageFile(file: File): Promise<string> {
-	await mkdir(UPLOAD_DIR, { recursive: true });
-
-	const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-	const filename = `${randomUUID()}.${ext}`;
-	const buffer = Buffer.from(await file.arrayBuffer());
-
-	await writeFile(path.join(UPLOAD_DIR, filename), buffer);
-	return `${PUBLIC_UPLOAD_PATH}/${filename}`;
-}
-
-async function deleteImageFile(url: string): Promise<void> {
-	if (!url.startsWith(PUBLIC_UPLOAD_PATH)) return; // ảnh không phải do hệ thống upload (dữ liệu cũ) thì bỏ qua
-
-	const filename = url.slice(PUBLIC_UPLOAD_PATH.length + 1);
-	await unlink(path.join(UPLOAD_DIR, filename)).catch(() => undefined); // file có thể đã bị xoá thủ công, không chặn thao tác DB
+	await Promise.all(images.map((image) => deleteImageFile(image.url, env.SUPABASE_PRODUCT_IMAGE_BUCKET)));
 }
 
 export async function uploadProductImage(input: UploadProductImageInput) {
-	const url = await saveImageFile(input.file);
+	const url = await saveImageFile(input.file, env.SUPABASE_PRODUCT_IMAGE_BUCKET);
 
 	const image = await prisma.$transaction(async (tx) => {
 		if (input.isPrimary) {
@@ -381,7 +353,7 @@ export async function setPrimaryImage(id: bigint) {
 export async function deleteImage(id: bigint) {
 	const image = await prisma.productImage.findUniqueOrThrow({ where: { id } });
 	await prisma.productImage.delete({ where: { id } });
-	await deleteImageFile(image.url);
+	await deleteImageFile(image.url, env.SUPABASE_PRODUCT_IMAGE_BUCKET);
 }
 
 // ===================================================================
@@ -391,7 +363,7 @@ export async function deleteImage(id: bigint) {
 const productCardInclude = {
 	category: { select: { id: true, name: true, slug: true } },
 	variants: {
-		where: { status: "Active" as const },
+		where: { status: EntityStatus.Active },
 		orderBy: { price: "asc" as const },
 		select: {
 			id: true,
@@ -412,8 +384,8 @@ export async function getPublishedProducts(query: PublicProductQuery) {
 	const pageSize = query.pageSize || PAGINATION.DEFAULT_PAGE_SIZE;
 
 	const where: Prisma.ProductWhereInput = {
-		status: "Active",
-		variants: { some: { status: "Active" } }, // chỉ hiện sản phẩm còn ít nhất 1 biến thể đang bán
+		status: EntityStatus.Active,
+		variants: { some: { status: EntityStatus.Active } }, // chỉ hiện sản phẩm còn ít nhất 1 biến thể đang bán
 		...(query.search ? { name: { contains: query.search, mode: "insensitive" } } : {}),
 		...(query.categoryId ? { categoryId: BigInt(query.categoryId) } : {}),
 	};
@@ -461,7 +433,7 @@ export async function getPublishedProducts(query: PublicProductQuery) {
 
 export async function getFeaturedProducts(limit = 8) {
 	const products = await prisma.product.findMany({
-		where: { status: "Active", variants: { some: { status: "Active" } } },
+		where: { status: EntityStatus.Active, variants: { some: { status: EntityStatus.Active } } },
 		orderBy: { createdAt: "desc" },
 		take: limit,
 		include: productCardInclude,
@@ -472,12 +444,12 @@ export async function getFeaturedProducts(limit = 8) {
 
 export async function getProductBySlug(slug: string) {
 	const product = await prisma.product.findFirst({
-		where: { slug, status: "Active" },
+		where: { slug, status: EntityStatus.Active },
 		include: {
 			category: { select: { id: true, name: true, slug: true } },
 			options: { include: { values: true } },
 			variants: {
-				where: { status: "Active" },
+				where: { status: EntityStatus.Active },
 				orderBy: { price: "asc" },
 				include: {
 					optionValues: { include: { optionValue: true } },
@@ -493,10 +465,10 @@ export async function getProductBySlug(slug: string) {
 export async function getRelatedProducts(categoryId: bigint, excludeProductId: bigint, limit = 4) {
 	const products = await prisma.product.findMany({
 		where: {
-			status: "Active",
+			status: EntityStatus.Active,
 			categoryId,
 			id: { not: excludeProductId },
-			variants: { some: { status: "Active" } },
+			variants: { some: { status: EntityStatus.Active } },
 		},
 		take: limit,
 		include: productCardInclude,

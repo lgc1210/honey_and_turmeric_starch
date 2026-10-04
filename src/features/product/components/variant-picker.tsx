@@ -22,7 +22,14 @@ type Variant = {
 	images: { url: string }[];
 };
 
-export function VariantPicker({ options, variants }: { options: ProductOption[]; variants: Variant[] }) {
+type VariantPickerProps = {
+	name: string;
+	categoryName: string;
+	options: ProductOption[];
+	variants: Variant[];
+};
+
+export function VariantPicker({ name, categoryName, options, variants }: VariantPickerProps) {
 	const router = useRouter();
 
 	// value.id -> option.id, để biết 1 giá trị thuộc nhóm thuộc tính nào
@@ -85,28 +92,110 @@ export function VariantPicker({ options, variants }: { options: ProductOption[];
 
 	const images = activeVariant.images.length ? activeVariant.images : [];
 	const outOfStock = activeVariant.stockQuantity <= 0;
+	const hasDiscount = activeVariant.oldPrice && Number(activeVariant.oldPrice) > Number(activeVariant.price);
 
 	return (
-		<div className='space-y-6'>
-			<div>
-				<div className='aspect-square border border-border bg-muted'>
+		<div className='grid items-start gap-8 lg:grid-cols-2 lg:gap-12'>
+			{/* Thông tin + mua hàng: bên phải */}
+			<div className='animate-in fade-in slide-in-from-left-4 space-y-6 duration-500 lg:col-start-2 lg:row-start-2'>
+				<div>
+					<p className='text-sm text-muted-foreground'>
+						<span className='font-semibold'>{categoryName}</span> / Mã: {activeVariant.sku}
+					</p>
+					<h1 className='mt-2 font-sans text-2xl font-bold text-foreground lg:text-3xl'>{name}</h1>
+				</div>
+
+				<div>
+					<div className='flex items-baseline gap-3'>
+						<span className='text-3xl font-semibold text-primary'>{formatCurrency(activeVariant.price)}</span>
+						{hasDiscount && (
+							<span className='text-muted-foreground line-through'>{formatCurrency(activeVariant.oldPrice!)}</span>
+						)}
+					</div>
+					<div className='mt-2'>
+						{outOfStock ? (
+							<Badge variant='destructive'>Tạm hết hàng</Badge>
+						) : (
+							<p className='text-sm text-muted-foreground'>Còn {activeVariant.stockQuantity} sản phẩm</p>
+						)}
+					</div>
+				</div>
+
+				{options.map((option) => (
+					<div key={option.id} className='space-y-2'>
+						<p className='text-sm font-medium text-foreground'>{option.name}</p>
+						<div className='flex flex-wrap gap-2'>
+							{option.values.map((value) => (
+								<button
+									key={value.id}
+									type='button'
+									onClick={() => selectValue(option.id, value.id)}
+									className={`border px-3 py-1.5 text-sm ${
+										selected[option.id] === value.id
+											? "border-primary bg-primary/10 text-primary"
+											: "border-border text-foreground hover:border-primary/50"
+									}`}>
+									{value.value}
+								</button>
+							))}
+						</div>
+					</div>
+				))}
+
+				<div className='space-y-3 border-t border-border pt-6'>
+					<div className='flex items-stretch gap-3'>
+						<QuantityInput
+							value={quantity}
+							onChange={setQuantity}
+							max={activeVariant.stockQuantity}
+							disabled={outOfStock}
+						/>
+						<Button
+							type='button'
+							size='lg'
+							onClick={onAddToCart}
+							disabled={pending || outOfStock}
+							className={`flex-1 ${added ? "bg-primary" : ""}`}>
+							{pending ? (
+								"Đang thêm..."
+							) : added ? (
+								<span className='flex animate-in fade-in zoom-in-95 items-center gap-2 duration-300'>
+									<Check className='size-4' /> Đã thêm
+								</span>
+							) : (
+								"Thêm vào giỏ"
+							)}
+						</Button>
+					</div>
+
+					{message && <p className='animate-in fade-in text-sm text-destructive duration-300'>{message}</p>}
+				</div>
+			</div>
+
+			{/* Ảnh: đặt trước trong DOM để mobile hiện ảnh trên cùng, desktop nằm bên trái */}
+			<div className='animate-in fade-in slide-in-from-right-4 duration-500 lg:col-start-1 lg:row-start-2'>
+				<div className='aspect-4/3 overflow-hidden rounded-2xl bg-muted'>
 					{images[activeImage] ? (
 						// eslint-disable-next-line @next/next/no-img-element -- ảnh nội bộ do admin upload
-						<img src={images[activeImage].url} alt='' className='h-full w-full object-cover' />
+						<img src={images[activeImage].url} alt={name} className='h-full w-full object-cover' />
 					) : (
 						<div className='flex h-full w-full items-center justify-center text-sm text-muted-foreground'>
 							Chưa có ảnh
 						</div>
 					)}
 				</div>
+
 				{images.length > 1 && (
-					<div className='mt-2 flex gap-2'>
+					<div className='mt-3 grid grid-cols-4 gap-3'>
 						{images.map((image, index) => (
 							<button
 								key={image.url + index}
 								type='button'
 								onClick={() => setActiveImage(index)}
-								className={`h-16 w-16 border ${index === activeImage ? "border-primary" : "border-border"}`}>
+								aria-label={`Xem ảnh ${index + 1}`}
+								className={`aspect-4/3 overflow-hidden rounded-xl border-2 bg-muted transition-colors ${
+									index === activeImage ? "border-primary" : "border-transparent hover:border-primary/50"
+								}`}>
 								{/* eslint-disable-next-line @next/next/no-img-element -- ảnh nội bộ do admin upload */}
 								<img src={image.url} alt='' className='h-full w-full object-cover' />
 							</button>
@@ -114,68 +203,6 @@ export function VariantPicker({ options, variants }: { options: ProductOption[];
 					</div>
 				)}
 			</div>
-
-			<div className='flex items-baseline gap-3'>
-				<span className='text-2xl font-semibold text-primary'>{formatCurrency(activeVariant.price)}</span>
-				{activeVariant.oldPrice && Number(activeVariant.oldPrice) > Number(activeVariant.price) && (
-					<span className='text-muted-foreground line-through'>{formatCurrency(activeVariant.oldPrice)}</span>
-				)}
-			</div>
-
-			{options.map((option) => (
-				<div key={option.id} className='space-y-2'>
-					<p className='text-sm font-medium text-foreground'>{option.name}</p>
-					<div className='flex flex-wrap gap-2'>
-						{option.values.map((value) => (
-							<button
-								key={value.id}
-								type='button'
-								onClick={() => selectValue(option.id, value.id)}
-								className={`border px-3 py-1.5 text-sm ${
-									selected[option.id] === value.id
-										? "border-primary bg-primary/10 text-primary"
-										: "border-border text-foreground hover:border-primary/50"
-								}`}>
-								{value.value}
-							</button>
-						))}
-					</div>
-				</div>
-			))}
-
-			<div>
-				{outOfStock ? (
-					<Badge variant='destructive'>Tạm hết hàng</Badge>
-				) : (
-					<p className='text-sm text-muted-foreground'>Còn {activeVariant.stockQuantity} sản phẩm</p>
-				)}
-			</div>
-
-			<div className='flex flex-wrap items-center gap-3'>
-				<QuantityInput
-					value={quantity}
-					onChange={setQuantity}
-					max={activeVariant.stockQuantity}
-					disabled={outOfStock}
-				/>
-				<Button
-					type='button'
-					onClick={onAddToCart}
-					disabled={pending || outOfStock}
-					className={added ? "bg-primary" : undefined}>
-					{pending ? (
-						"Đang thêm..."
-					) : added ? (
-						<span className='flex animate-in fade-in zoom-in-95 items-center gap-2 duration-300'>
-							<Check className='size-4' /> Đã thêm
-						</span>
-					) : (
-						"Thêm vào giỏ"
-					)}
-				</Button>
-			</div>
-
-			{message && <p className='animate-in fade-in text-sm text-destructive duration-300'>{message}</p>}
 		</div>
 	);
 }

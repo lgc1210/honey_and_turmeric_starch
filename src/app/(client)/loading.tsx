@@ -3,7 +3,7 @@ import { ProductGridSkeleton } from "@/features/product/components/product-skele
 
 export default function HomeLoading() {
 	return (
-		<div className='space-y-16'>
+		<div className='space-y-16  max-w-6xl px-4 py-8 w-full mx-auto'>
 			<div className='space-y-4 border border-border bg-card px-6 py-20 text-center'>
 				<Skeleton className='mx-auto h-4 w-40' />
 				<Skeleton className='mx-auto h-10 w-3/4 max-w-md' />

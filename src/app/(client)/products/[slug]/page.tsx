@@ -13,7 +13,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 	const relatedProducts = await getRelatedProducts(BigInt(product.categoryId), BigInt(product.id));
 
 	return (
-		<div className='space-y-12'>
+		<div className='space-y-12 max-w-6xl px-4 py-8 w-full mx-auto'>
 			<nav className='text-sm text-muted-foreground'>
 				<Link href={paths.client.home} className='hover:text-foreground'>
 					Trang chủ
@@ -25,23 +25,25 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 				/ <span className='text-foreground'>{product.name}</span>
 			</nav>
 
-			<div className='grid gap-8 lg:grid-cols-2'>
-				<div className='animate-in fade-in slide-in-from-left-4 duration-500'>
-					<VariantPicker options={product.options} variants={product.variants} />
-				</div>
+			<VariantPicker
+				name={product.name}
+				categoryName={product.category.name}
+				options={product.options}
+				variants={product.variants}
+			/>
 
-				<div className='animate-in fade-in slide-in-from-right-4 duration-500'>
-					<p className='text-sm text-muted-foreground'>{product.category.name}</p>
-					<h1 className='mt-1 font-serif text-2xl font-semibold text-foreground'>{product.name}</h1>
-					{product.description && (
-						<p className='mt-4 whitespace-pre-line text-muted-foreground'>{product.description}</p>
-					)}
-				</div>
-			</div>
+			{product.description && (
+				<section className='animate-in fade-in duration-500'>
+					<h2 className='mb-4 border-t border-border pt-8 font-sans text-2xl font-bold text-foreground'>
+						Mô tả sản phẩm
+					</h2>
+					<p className='max-w-3xl whitespace-pre-line leading-relaxed text-muted-foreground'>{product.description}</p>
+				</section>
+			)}
 
 			{relatedProducts.length > 0 && (
 				<section>
-					<h2 className='mb-6 font-serif text-2xl font-semibold text-foreground'>Sản phẩm liên quan</h2>
+					<h2 className='mb-6 font-sans text-2xl font-bold text-foreground'>Sản phẩm liên quan</h2>
 					<div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
 						{relatedProducts.map((related, index) => (
 							<div

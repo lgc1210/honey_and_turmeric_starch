@@ -15,9 +15,9 @@ export async function SiteHeader() {
 	const itemCount = await getCartItemCount(cartId);
 
 	return (
-		<header className='sticky top-0 z-40 border-b border-border bg-card'>
+		<header className='sticky top-0 left-0 w-full z-40 border-b border-border bg-card'>
 			<div className='mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4'>
-				<Link href={paths.client.home} className='font-sans tracking-wider text-2xl font-extrabold text-foreground'>
+				<Link href={paths.client.home} className='font-sans tracking-wider text-2xl font-bold text-foreground'>
 					Kim Bạc Store
 				</Link>
 
