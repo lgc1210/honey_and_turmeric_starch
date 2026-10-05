@@ -75,6 +75,7 @@ export function HeroSlider() {
 	const onTouchStart = (e: React.TouchEvent) => {
 		touchStartX.current = e.touches[0].clientX;
 	};
+
 	const onTouchEnd = (e: React.TouchEvent) => {
 		if (touchStartX.current === null) return;
 		const delta = e.changedTouches[0].clientX - touchStartX.current;
@@ -122,12 +123,10 @@ export function HeroSlider() {
 						{/* Lớp overlay: tối dần từ trái sang phải để chữ dễ đọc */}
 						<div
 							aria-hidden
-							className='absolute inset-0 bg-linear-to-r from-black/70 via-black/45 to-black/20 sm:to-black/10'
-						/>
+							className='absolute inset-0 bg-linear-to-r from-black/70 via-black/45 to-black/20 sm:to-black/10'></div>
 						<div
 							aria-hidden
-							className='absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/40 to-transparent'
-						/>
+							className='absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/40 to-transparent'></div>
 
 						{/* Nội dung — key theo trạng thái active để animation chạy lại mỗi lần đổi slide */}
 						<div className='relative z-10 flex h-full items-center px-6 sm:px-12 lg:px-20'>

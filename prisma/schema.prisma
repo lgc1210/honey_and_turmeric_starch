@@ -212,6 +212,7 @@ model ProductVariant {
   @@index([productId])
   @@index([sku])
   @@index([status])
+  @@index([status, stockQuantity])
   @@map("product_variants")
 }
 
@@ -336,8 +337,9 @@ model Order {
   @@index([cartId])
   @@index([orderNumber])
   @@index([status])
-  @@index([createdAt])
   @@map("orders")
+  @@index([status, createdAt])
+  @@index([createdAt])
 }
 
 // =========================

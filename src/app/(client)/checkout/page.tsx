@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { getCart, getCartId } from "@/features/cart/api/service";
 import { CheckoutForm } from "@/features/checkout/components/checkout-form";
+import paths from "@/config/path";
 
 export default async function CheckoutPage() {
 	const cartId = await getCartId();
 	const cart = await getCart(cartId);
-	if (cart.items.length === 0) redirect("/cart");
+
+	if (cart.items.length === 0) redirect(paths.client.cart);
 
 	return (
 		<div className='max-w-6xl px-4 py-8 w-full mx-auto'>

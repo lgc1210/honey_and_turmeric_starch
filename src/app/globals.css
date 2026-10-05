@@ -142,3 +142,7 @@
     width: 100%;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
